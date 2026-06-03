@@ -1,0 +1,63 @@
+CrownWell Labs Community License
+Version 1.0, 2026
+
+Copyright (c) 2026 CrownWell Labs. All rights reserved.
+
+DEFINITIONS
+
+"Software" means the Mise source code, binaries, documentation, and associated
+files made available under this license.
+
+"CrownWell Labs" means Pelopolis Holdings / CrownWell Labs and its authorized
+representatives.
+
+"You" means the individual or legal entity exercising rights under this license.
+
+"Competing Product" means any software product or hosted service that
+substantially replicates the core functionality of the Software and is offered
+to third parties commercially.
+
+GRANT OF RIGHTS
+
+Subject to the terms of this license, CrownWell Labs grants You a perpetual,
+worldwide, non-exclusive, royalty-free license to:
+
+  1. Use the Software for personal, educational, or internal business purposes.
+  2. Copy and modify the Software for your own use.
+  3. Self-host the Software for your own organization (not for resale).
+  4. Distribute unmodified copies of the Software, provided this license and all
+     copyright notices are retained in full.
+
+RESTRICTIONS
+
+You may not, without prior written permission from CrownWell Labs:
+
+  1. Sell, sublicense, or commercially distribute the Software or any derivative
+     work as a standalone product or service.
+  2. Offer the Software or a Competing Product as a hosted or managed service
+     to third parties.
+  3. Remove, obscure, or alter any copyright notice, license notice, or
+     attribution to CrownWell Labs within the Software or its documentation.
+  4. Use the CrownWell Labs name, trademarks, or branding to endorse or promote
+     products derived from this Software without prior written consent.
+
+PAID FEATURES
+
+Certain features of the Software are gated behind a commercial license
+(Pro, Lifetime, or Business plans) available at crownwelllabs.com. A valid
+purchased license grants perpetual access to those features as described at
+the time of purchase. CrownWell Labs will not revoke a validly purchased
+license.
+
+NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL
+CROWNWELL LABS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING
+FROM THE USE OF THE SOFTWARE.
+
+CONTACT
+
+For commercial licensing, partnership inquiries, or permissions beyond the
+scope of this license, contact: admin@crownwelllabs.com
