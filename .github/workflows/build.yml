@@ -39,7 +39,7 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       - name: Cache Rust
         uses: Swatinem/rust-cache@v2
@@ -81,46 +81,86 @@ jobs:
       - name: Upload to R2 (macOS)
         if: matrix.platform == 'macos-latest'
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
           TAG: ${{ github.ref_name }}
         run: |
-          pip install awscli --quiet
+          pip install boto3 --quiet
           DMG=$(find src-tauri/target/universal-apple-darwin/release/bundle/dmg -name "*.dmg" 2>/dev/null | head -1)
           [ -z "$DMG" ] && DMG=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" | head -1)
-          aws s3 cp "$DMG" "s3://${{ secrets.R2_BUCKET }}/mise/${TAG}/Mise-macOS.dmg"    --endpoint-url "$R2_ENDPOINT" --region auto
-          aws s3 cp "$DMG" "s3://${{ secrets.R2_BUCKET }}/mise/latest/Mise-macOS.dmg"   --endpoint-url "$R2_ENDPOINT" --region auto
+          python3 - "$DMG" "$TAG" <<'PYEOF'
+          import boto3, sys, os
+          src, tag = sys.argv[1], sys.argv[2]
+          s3 = boto3.client('s3',
+            endpoint_url=f'https://{os.environ["R2_ACCOUNT_ID"]}.r2.cloudflarestorage.com',
+            aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
+            aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'],
+            region_name='auto')
+          bucket = os.environ['R2_BUCKET']
+          for key in [f'mise/{tag}/Mise-macOS.dmg', 'mise/latest/Mise-macOS.dmg']:
+            print(f'Uploading {key}')
+            s3.upload_file(src, bucket, key, ExtraArgs={'ContentType': 'application/octet-stream'})
+          PYEOF
 
       - name: Upload to R2 (Windows)
         if: matrix.platform == 'windows-latest'
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
           TAG: ${{ github.ref_name }}
         shell: pwsh
         run: |
-          pip install awscli --quiet
-          $EXE = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" -Filter "*.exe" | Select-Object -First 1
-          aws s3 cp $EXE.FullName "s3://${{ secrets.R2_BUCKET }}/mise/${env:TAG}/Mise-Setup-Windows.exe"   --endpoint-url "$env:R2_ENDPOINT" --region auto
-          aws s3 cp $EXE.FullName "s3://${{ secrets.R2_BUCKET }}/mise/latest/Mise-Setup-Windows.exe"      --endpoint-url "$env:R2_ENDPOINT" --region auto
+          pip install boto3 --quiet
+          $EXE = (Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" -Filter "*.exe" | Select-Object -First 1).FullName
+          python3 - $EXE $env:TAG @'
+          import boto3, sys, os
+          src, tag = sys.argv[1], sys.argv[2]
+          s3 = boto3.client('s3',
+            endpoint_url=f'https://{os.environ["R2_ACCOUNT_ID"]}.r2.cloudflarestorage.com',
+            aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
+            aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'],
+            region_name='auto')
+          bucket = os.environ['R2_BUCKET']
+          for key in [f'mise/{tag}/Mise-Setup-Windows.exe', 'mise/latest/Mise-Setup-Windows.exe']:
+            print(f'Uploading {key}')
+            s3.upload_file(src, bucket, key, ExtraArgs={'ContentType': 'application/octet-stream'})
+          '@
 
       - name: Upload to R2 (Linux)
         if: matrix.platform == 'ubuntu-22.04'
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
           TAG: ${{ github.ref_name }}
         run: |
-          pip install awscli --quiet
+          pip install boto3 --quiet
           APPIMAGE=$(find src-tauri/target/release/bundle/appimage -name "*.AppImage" | head -1)
           DEB=$(find src-tauri/target/release/bundle/deb -name "*.deb" | head -1)
-          aws s3 cp "$APPIMAGE" "s3://${{ secrets.R2_BUCKET }}/mise/${TAG}/Mise-linux-x86_64.AppImage"  --endpoint-url "$R2_ENDPOINT" --region auto
-          aws s3 cp "$APPIMAGE" "s3://${{ secrets.R2_BUCKET }}/mise/latest/Mise-linux-x86_64.AppImage" --endpoint-url "$R2_ENDPOINT" --region auto
-          aws s3 cp "$DEB"      "s3://${{ secrets.R2_BUCKET }}/mise/${TAG}/Mise-linux-amd64.deb"        --endpoint-url "$R2_ENDPOINT" --region auto
-          aws s3 cp "$DEB"      "s3://${{ secrets.R2_BUCKET }}/mise/latest/Mise-linux-amd64.deb"       --endpoint-url "$R2_ENDPOINT" --region auto
+          python3 - "$APPIMAGE" "$DEB" "$TAG" <<'PYEOF'
+          import boto3, sys, os
+          appimage, deb, tag = sys.argv[1], sys.argv[2], sys.argv[3]
+          s3 = boto3.client('s3',
+            endpoint_url=f'https://{os.environ["R2_ACCOUNT_ID"]}.r2.cloudflarestorage.com',
+            aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
+            aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'],
+            region_name='auto')
+          bucket = os.environ['R2_BUCKET']
+          uploads = [
+            (appimage, f'mise/{tag}/Mise-linux-x86_64.AppImage'),
+            (appimage, 'mise/latest/Mise-linux-x86_64.AppImage'),
+            (deb,      f'mise/{tag}/Mise-linux-amd64.deb'),
+            (deb,      'mise/latest/Mise-linux-amd64.deb'),
+          ]
+          for src, key in uploads:
+            print(f'Uploading {key}')
+            s3.upload_file(src, bucket, key, ExtraArgs={'ContentType': 'application/octet-stream'})
+          PYEOF
 
   publish:
     needs: [build]
