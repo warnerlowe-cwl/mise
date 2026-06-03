@@ -11,112 +11,40 @@ permissions:
 
 jobs:
 
-  # ── macOS — produces Mise.dmg ───────────────────────────────────────────────
-  build-macos:
-    runs-on: macos-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: --target universal-apple-darwin
+          - platform: windows-latest
+            args: ''
+          - platform: ubuntu-22.04
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
 
-      - name: Cache Rust build artifacts
+      - name: Cache Rust
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
 
-      - name: Install frontend deps
-        run: npm ci
-
-      - name: Build Tauri app (macOS)
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_MISE_API_URL: ${{ secrets.VITE_MISE_API_URL }}
-        with:
-          args: --target universal-apple-darwin
-
-      - name: Upload macOS DMG to R2
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-          TAG: ${{ github.ref_name }}
-        run: |
-          pip install awscli --quiet
-          DMG=$(find src-tauri/target/universal-apple-darwin/release/bundle/dmg -name "*.dmg" | head -1)
-          aws s3 cp "$DMG" "s3://${R2_BUCKET}/${TAG}/Mise-macOS.dmg"    --endpoint-url "${R2_ENDPOINT}"
-          aws s3 cp "$DMG" "s3://${R2_BUCKET}/latest/Mise-macOS.dmg"    --endpoint-url "${R2_ENDPOINT}"
-
-  # ── Windows — produces Mise_x64-setup.exe ──────────────────────────────────
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust build artifacts
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
-
-      - name: Install frontend deps
-        run: npm ci
-
-      - name: Build Tauri app (Windows)
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_MISE_API_URL: ${{ secrets.VITE_MISE_API_URL }}
-
-      - name: Upload Windows installer to R2
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-          TAG: ${{ github.ref_name }}
-        shell: pwsh
-        run: |
-          pip install awscli --quiet
-          $EXE = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" -Filter "*.exe" | Select-Object -First 1
-          aws s3 cp $EXE.FullName "s3://${env:R2_BUCKET}/${env:TAG}/Mise-Setup-Windows.exe"  --endpoint-url "${env:R2_ENDPOINT}"
-          aws s3 cp $EXE.FullName "s3://${env:R2_BUCKET}/latest/Mise-Setup-Windows.exe"      --endpoint-url "${env:R2_ENDPOINT}"
-
-  # ── Linux — produces .deb + .AppImage ──────────────────────────────────────
-  build-linux:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust build artifacts
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
-
-      - name: Install system dependencies
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y \
@@ -129,86 +57,24 @@ jobs:
       - name: Install frontend deps
         run: npm ci
 
-      - name: Build Tauri app (Linux)
+      - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_MISE_API_URL: ${{ secrets.VITE_MISE_API_URL }}
-
-      - name: Upload Linux builds to R2
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-          TAG: ${{ github.ref_name }}
-        run: |
-          pip install awscli --quiet
-          APPIMAGE=$(find src-tauri/target/release/bundle/appimage -name "*.AppImage" | head -1)
-          DEB=$(find src-tauri/target/release/bundle/deb -name "*.deb" | head -1)
-          aws s3 cp "$APPIMAGE" "s3://${R2_BUCKET}/${TAG}/Mise-linux-x86_64.AppImage"  --endpoint-url "${R2_ENDPOINT}"
-          aws s3 cp "$APPIMAGE" "s3://${R2_BUCKET}/latest/Mise-linux-x86_64.AppImage"  --endpoint-url "${R2_ENDPOINT}"
-          aws s3 cp "$DEB"      "s3://${R2_BUCKET}/${TAG}/Mise-linux-amd64.deb"         --endpoint-url "${R2_ENDPOINT}"
-          aws s3 cp "$DEB"      "s3://${R2_BUCKET}/latest/Mise-linux-amd64.deb"         --endpoint-url "${R2_ENDPOINT}"
-
-  # ── Publish latest.json + GitHub Release ───────────────────────────────────
-  publish:
-    needs: [build-macos, build-windows, build-linux]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Write and upload latest.json
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-        run: |
-          pip install awscli --quiet
-          TAG="${GITHUB_REF_NAME:-dev}"
-          BASE="https://downloads.crownwelllabs.com/mise"
-          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-          cat > latest.json << JSON
-          {
-            "version": "${TAG}",
-            "released_at": "${NOW}",
-            "latest": {
-              "mac":       "${BASE}/latest/Mise-macOS.dmg",
-              "windows":   "${BASE}/latest/Mise-Setup-Windows.exe",
-              "linux":     "${BASE}/latest/Mise-linux-x86_64.AppImage",
-              "linux_deb": "${BASE}/latest/Mise-linux-amd64.deb"
-            },
-            "versioned": {
-              "mac":       "${BASE}/${TAG}/Mise-macOS.dmg",
-              "windows":   "${BASE}/${TAG}/Mise-Setup-Windows.exe",
-              "linux":     "${BASE}/${TAG}/Mise-linux-x86_64.AppImage",
-              "linux_deb": "${BASE}/${TAG}/Mise-linux-amd64.deb"
-            }
-          }
-          JSON
-
-          aws s3 cp latest.json "s3://${R2_BUCKET}/mise/latest.json" \
-            --endpoint-url "${R2_ENDPOINT}" \
-            --content-type "application/json" \
-            --cache-control "max-age=300, stale-while-revalidate=60"
-
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
         with:
-          body: |
+          tagName: ${{ github.ref_name }}
+          releaseName: Mise ${{ github.ref_name }}
+          releaseBody: |
             ## Mise ${{ github.ref_name }}
 
-            **Food Cost Management for Professional Kitchens — by CrownWell Labs**
+            **Restaurant & hospitality management — by CrownWell Labs**
 
-            ### Downloads
-            | Platform | Link |
-            |---|---|
-            | macOS 12+ (Universal) | [Mise-macOS.dmg](https://downloads.crownwelllabs.com/mise/${{ github.ref_name }}/Mise-macOS.dmg) |
-            | Windows 10 / 11 64-bit | [Mise-Setup-Windows.exe](https://downloads.crownwelllabs.com/mise/${{ github.ref_name }}/Mise-Setup-Windows.exe) |
-            | Ubuntu / Debian | [Mise-linux-amd64.deb](https://downloads.crownwelllabs.com/mise/${{ github.ref_name }}/Mise-linux-amd64.deb) |
-            | Linux x86_64 (other distros) | [Mise-linux-x86_64.AppImage](https://downloads.crownwelllabs.com/mise/${{ github.ref_name }}/Mise-linux-x86_64.AppImage) |
+            Free to download. Sign in at [crownwelllabs.com/downloads](https://crownwelllabs.com/downloads) for Pro and Lifetime plans.
 
-            > Sign-in required. Plans start at $15/month — seasonal and lifetime options available.
+            Licensed under the [CrownWell Labs Community License v1.0](https://github.com/warnerlowe-cwl/mise/blob/main/LICENSE).
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
