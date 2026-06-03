@@ -132,17 +132,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
         run: |
-          gh release edit "$TAG" --repo warnerlowe-cwl/mise --draft=false \
-            --notes "## Mise ${TAG}
-
-**Restaurant & hospitality management — by CrownWell Labs**
-
-### Download
-| Platform | Link |
-|---|---|
-| Windows 10/11 | [Mise-Setup-Windows.exe](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-Setup-Windows.exe) |
-| macOS 12+ | [Mise-macOS.dmg](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-macOS.dmg) |
-| Ubuntu/Debian | [Mise-linux-amd64.deb](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-linux-amd64.deb) |
-| Linux (other) | [Mise-linux-x86_64.AppImage](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-linux-x86_64.AppImage) |
-
-> Sign in at [crownwelllabs.com/downloads](https://crownwelllabs.com/downloads) · Licensed under [CrownWell Labs Community License v1.0](https://github.com/warnerlowe-cwl/mise/blob/main/LICENSE)"
+          {
+            echo "## Mise ${TAG}"
+            echo ""
+            echo "Restaurant & hospitality management — by CrownWell Labs"
+            echo ""
+            echo "### Download"
+            echo "| Platform | Link |"
+            echo "|---|---|"
+            echo "| Windows 10/11 | [Mise-Setup-Windows.exe](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-Setup-Windows.exe) |"
+            echo "| macOS 12+ | [Mise-macOS.dmg](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-macOS.dmg) |"
+            echo "| Ubuntu/Debian | [Mise-linux-amd64.deb](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-linux-amd64.deb) |"
+            echo "| Linux (other) | [Mise-linux-x86_64.AppImage](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-linux-x86_64.AppImage) |"
+            echo ""
+            echo "> Sign in at [crownwelllabs.com/downloads](https://crownwelllabs.com/downloads)"
+          } > /tmp/notes.md
+          gh release edit "$TAG" --repo warnerlowe-cwl/mise --draft=false --notes-file /tmp/notes.md
