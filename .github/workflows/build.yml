@@ -18,10 +18,13 @@ jobs:
         include:
           - platform: macos-latest
             args: --target universal-apple-darwin
+            artifact: macos
           - platform: windows-latest
             args: ''
+            artifact: windows
           - platform: ubuntu-22.04
             args: ''
+            artifact: linux
 
     runs-on: ${{ matrix.platform }}
 
@@ -69,12 +72,76 @@ jobs:
           releaseName: Mise ${{ github.ref_name }}
           releaseBody: |
             ## Mise ${{ github.ref_name }}
-
             **Restaurant & hospitality management — by CrownWell Labs**
-
-            Free to download. Sign in at [crownwelllabs.com/downloads](https://crownwelllabs.com/downloads) for Pro and Lifetime plans.
-
-            Licensed under the [CrownWell Labs Community License v1.0](https://github.com/warnerlowe-cwl/mise/blob/main/LICENSE).
-          releaseDraft: false
+            Download at [crownwelllabs.com/downloads](https://crownwelllabs.com/downloads)
+          releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Upload to R2 (macOS)
+        if: matrix.platform == 'macos-latest'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          TAG: ${{ github.ref_name }}
+        run: |
+          pip install awscli --quiet
+          DMG=$(find src-tauri/target/universal-apple-darwin/release/bundle/dmg -name "*.dmg" 2>/dev/null | head -1)
+          [ -z "$DMG" ] && DMG=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" | head -1)
+          aws s3 cp "$DMG" "s3://${{ secrets.R2_BUCKET }}/mise/${TAG}/Mise-macOS.dmg"    --endpoint-url "$R2_ENDPOINT" --region auto
+          aws s3 cp "$DMG" "s3://${{ secrets.R2_BUCKET }}/mise/latest/Mise-macOS.dmg"   --endpoint-url "$R2_ENDPOINT" --region auto
+
+      - name: Upload to R2 (Windows)
+        if: matrix.platform == 'windows-latest'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          TAG: ${{ github.ref_name }}
+        shell: pwsh
+        run: |
+          pip install awscli --quiet
+          $EXE = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" -Filter "*.exe" | Select-Object -First 1
+          aws s3 cp $EXE.FullName "s3://${{ secrets.R2_BUCKET }}/mise/${env:TAG}/Mise-Setup-Windows.exe"   --endpoint-url "$env:R2_ENDPOINT" --region auto
+          aws s3 cp $EXE.FullName "s3://${{ secrets.R2_BUCKET }}/mise/latest/Mise-Setup-Windows.exe"      --endpoint-url "$env:R2_ENDPOINT" --region auto
+
+      - name: Upload to R2 (Linux)
+        if: matrix.platform == 'ubuntu-22.04'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          TAG: ${{ github.ref_name }}
+        run: |
+          pip install awscli --quiet
+          APPIMAGE=$(find src-tauri/target/release/bundle/appimage -name "*.AppImage" | head -1)
+          DEB=$(find src-tauri/target/release/bundle/deb -name "*.deb" | head -1)
+          aws s3 cp "$APPIMAGE" "s3://${{ secrets.R2_BUCKET }}/mise/${TAG}/Mise-linux-x86_64.AppImage"  --endpoint-url "$R2_ENDPOINT" --region auto
+          aws s3 cp "$APPIMAGE" "s3://${{ secrets.R2_BUCKET }}/mise/latest/Mise-linux-x86_64.AppImage" --endpoint-url "$R2_ENDPOINT" --region auto
+          aws s3 cp "$DEB"      "s3://${{ secrets.R2_BUCKET }}/mise/${TAG}/Mise-linux-amd64.deb"        --endpoint-url "$R2_ENDPOINT" --region auto
+          aws s3 cp "$DEB"      "s3://${{ secrets.R2_BUCKET }}/mise/latest/Mise-linux-amd64.deb"       --endpoint-url "$R2_ENDPOINT" --region auto
+
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release edit "$TAG" --repo warnerlowe-cwl/mise --draft=false \
+            --notes "## Mise ${TAG}
+
+**Restaurant & hospitality management — by CrownWell Labs**
+
+### Download
+| Platform | Link |
+|---|---|
+| Windows 10/11 | [Mise-Setup-Windows.exe](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-Setup-Windows.exe) |
+| macOS 12+ | [Mise-macOS.dmg](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-macOS.dmg) |
+| Ubuntu/Debian | [Mise-linux-amd64.deb](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-linux-amd64.deb) |
+| Linux (other) | [Mise-linux-x86_64.AppImage](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-linux-x86_64.AppImage) |
+
+> Sign in at [crownwelllabs.com/downloads](https://crownwelllabs.com/downloads) · Licensed under [CrownWell Labs Community License v1.0](https://github.com/warnerlowe-cwl/mise/blob/main/LICENSE)"
