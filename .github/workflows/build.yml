@@ -90,19 +90,22 @@ jobs:
           pip install boto3 --quiet
           DMG=$(find src-tauri/target/universal-apple-darwin/release/bundle/dmg -name "*.dmg" 2>/dev/null | head -1)
           [ -z "$DMG" ] && DMG=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" | head -1)
-          python3 - "$DMG" "$TAG" <<'PYEOF'
-          import boto3, sys, os
-          src, tag = sys.argv[1], sys.argv[2]
-          s3 = boto3.client('s3',
-            endpoint_url=f'https://{os.environ["R2_ACCOUNT_ID"]}.r2.cloudflarestorage.com',
-            aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
-            aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'],
-            region_name='auto')
-          bucket = os.environ['R2_BUCKET']
-          for key in [f'mise/{tag}/Mise-macOS.dmg', 'mise/latest/Mise-macOS.dmg']:
-            print(f'Uploading {key}')
-            s3.upload_file(src, bucket, key, ExtraArgs={'ContentType': 'application/octet-stream'})
-          PYEOF
+          export FILE="$DMG"
+          python3 -c "
+import boto3, os
+s3 = boto3.client('s3',
+    endpoint_url='https://' + os.environ['R2_ACCOUNT_ID'] + '.r2.cloudflarestorage.com',
+    aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
+    aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'],
+    region_name='auto')
+src = os.environ['FILE']
+tag = os.environ['TAG']
+bucket = os.environ['R2_BUCKET']
+for key in ['mise/' + tag + '/Mise-macOS.dmg', 'mise/latest/Mise-macOS.dmg']:
+    print('Uploading', key)
+    s3.upload_file(src, bucket, key, ExtraArgs={'ContentType': 'application/octet-stream'})
+print('Done')
+"
 
       - name: Upload to R2 (Windows)
         if: matrix.platform == 'windows-latest'
@@ -115,20 +118,22 @@ jobs:
         shell: pwsh
         run: |
           pip install boto3 --quiet
-          $EXE = (Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" -Filter "*.exe" | Select-Object -First 1).FullName
-          python3 - $EXE $env:TAG @'
-          import boto3, sys, os
-          src, tag = sys.argv[1], sys.argv[2]
-          s3 = boto3.client('s3',
-            endpoint_url=f'https://{os.environ["R2_ACCOUNT_ID"]}.r2.cloudflarestorage.com',
-            aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
-            aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'],
-            region_name='auto')
-          bucket = os.environ['R2_BUCKET']
-          for key in [f'mise/{tag}/Mise-Setup-Windows.exe', 'mise/latest/Mise-Setup-Windows.exe']:
-            print(f'Uploading {key}')
-            s3.upload_file(src, bucket, key, ExtraArgs={'ContentType': 'application/octet-stream'})
-          '@
+          $env:FILE = (Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" -Filter "*.exe" | Select-Object -First 1).FullName
+          python3 -c "
+import boto3, os
+s3 = boto3.client('s3',
+    endpoint_url='https://' + os.environ['R2_ACCOUNT_ID'] + '.r2.cloudflarestorage.com',
+    aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
+    aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'],
+    region_name='auto')
+src = os.environ['FILE']
+tag = os.environ['TAG']
+bucket = os.environ['R2_BUCKET']
+for key in ['mise/' + tag + '/Mise-Setup-Windows.exe', 'mise/latest/Mise-Setup-Windows.exe']:
+    print('Uploading', key)
+    s3.upload_file(src, bucket, key, ExtraArgs={'ContentType': 'application/octet-stream'})
+print('Done')
+"
 
       - name: Upload to R2 (Linux)
         if: matrix.platform == 'ubuntu-22.04'
@@ -140,27 +145,30 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           pip install boto3 --quiet
-          APPIMAGE=$(find src-tauri/target/release/bundle/appimage -name "*.AppImage" | head -1)
-          DEB=$(find src-tauri/target/release/bundle/deb -name "*.deb" | head -1)
-          python3 - "$APPIMAGE" "$DEB" "$TAG" <<'PYEOF'
-          import boto3, sys, os
-          appimage, deb, tag = sys.argv[1], sys.argv[2], sys.argv[3]
-          s3 = boto3.client('s3',
-            endpoint_url=f'https://{os.environ["R2_ACCOUNT_ID"]}.r2.cloudflarestorage.com',
-            aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
-            aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'],
-            region_name='auto')
-          bucket = os.environ['R2_BUCKET']
-          uploads = [
-            (appimage, f'mise/{tag}/Mise-linux-x86_64.AppImage'),
-            (appimage, 'mise/latest/Mise-linux-x86_64.AppImage'),
-            (deb,      f'mise/{tag}/Mise-linux-amd64.deb'),
-            (deb,      'mise/latest/Mise-linux-amd64.deb'),
-          ]
-          for src, key in uploads:
-            print(f'Uploading {key}')
-            s3.upload_file(src, bucket, key, ExtraArgs={'ContentType': 'application/octet-stream'})
-          PYEOF
+          export APPIMAGE=$(find src-tauri/target/release/bundle/appimage -name "*.AppImage" | head -1)
+          export DEB=$(find src-tauri/target/release/bundle/deb -name "*.deb" | head -1)
+          python3 -c "
+import boto3, os
+s3 = boto3.client('s3',
+    endpoint_url='https://' + os.environ['R2_ACCOUNT_ID'] + '.r2.cloudflarestorage.com',
+    aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
+    aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'],
+    region_name='auto')
+appimage = os.environ['APPIMAGE']
+deb = os.environ['DEB']
+tag = os.environ['TAG']
+bucket = os.environ['R2_BUCKET']
+uploads = [
+    (appimage, 'mise/' + tag + '/Mise-linux-x86_64.AppImage'),
+    (appimage, 'mise/latest/Mise-linux-x86_64.AppImage'),
+    (deb,      'mise/' + tag + '/Mise-linux-amd64.deb'),
+    (deb,      'mise/latest/Mise-linux-amd64.deb'),
+]
+for src, key in uploads:
+    print('Uploading', key)
+    s3.upload_file(src, bucket, key, ExtraArgs={'ContentType': 'application/octet-stream'})
+print('Done')
+"
 
   publish:
     needs: [build]
