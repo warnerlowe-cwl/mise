@@ -88,7 +88,7 @@ jobs:
           TAG: ${{ github.ref_name }}
           PLATFORM: macos
         run: |
-          python3 -m pip install boto3 --quiet --user
+          python3 -m pip install boto3 --quiet --break-system-packages
           DMG=$(find src-tauri/target/universal-apple-darwin/release/bundle/dmg -name "*.dmg" 2>/dev/null | head -1)
           [ -z "$DMG" ] && DMG=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" | head -1)
           FILE="$DMG" python3 .github/scripts/upload_r2.py
@@ -118,7 +118,7 @@ jobs:
           TAG: ${{ github.ref_name }}
           PLATFORM: linux
         run: |
-          python3 -m pip install boto3 --quiet --user
+          python3 -m pip install boto3 --quiet
           export APPIMAGE=$(find src-tauri/target/release/bundle/appimage -name "*.AppImage" | head -1)
           export DEB=$(find src-tauri/target/release/bundle/deb -name "*.deb" | head -1)
           python3 .github/scripts/upload_r2.py
