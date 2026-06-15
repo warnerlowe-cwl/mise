@@ -8,6 +8,7 @@ import Conversions from '../views/Conversions.vue'
 import Reports from '../views/Reports.vue'
 import Login from '../views/Login.vue'
 import Plans from '../views/Plans.vue'
+import Settings from '../views/Settings.vue'
 
 const routes = [
   { path: '/',            redirect: '/dashboard' },
@@ -19,6 +20,7 @@ const routes = [
   { path: '/waste',       component: WasteTracker, meta: { title: 'Waste Tracker' } },
   { path: '/conversions', component: Conversions, meta: { title: 'Conversions' } },
   { path: '/reports',     component: Reports,     meta: { title: 'Reports' } },
+  { path: '/settings',    component: Settings,    meta: { title: 'Settings' } },
 ]
 
 const router = createRouter({

@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = ref(true)
 
   const isLoggedIn = computed(() => !!user.value)
+  const businessName = computed(() => user.value?.user_metadata?.business_name || '')
   const hasActiveLicense = computed(() => {
     if (!license.value) return false
     if (license.value.status !== 'active') return false
@@ -76,9 +77,18 @@ export const useAuthStore = defineStore('auth', () => {
     await fetchLicense()
   }
 
+  async function updateProfile({ businessName }) {
+    const { data, error } = await supabase.auth.updateUser({
+      data: { business_name: (businessName || '').trim() },
+    })
+    if (error) throw error
+    user.value = data.user
+    return data
+  }
+
   return {
-    user, license, loading,
+    user, license, loading, businessName,
     isLoggedIn, hasActiveLicense, licenseStatus,
-    init, signIn, signUp, signOut, refreshLicense,
+    init, signIn, signUp, signOut, refreshLicense, updateProfile,
   }
 })

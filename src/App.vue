@@ -60,11 +60,19 @@
           </svg>
           Reports
         </RouterLink>
+        <RouterLink to="/settings" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="10" cy="10" r="2.6"/>
+            <path d="M10 1.8v2.4M10 15.8v2.4M18.2 10h-2.4M4.2 10H1.8M15.8 4.2l-1.7 1.7M5.9 14.1l-1.7 1.7M15.8 15.8l-1.7-1.7M5.9 5.9L4.2 4.2"/>
+          </svg>
+          Settings
+        </RouterLink>
       </nav>
 
       <div class="sidebar-footer">
         <template v-if="authStore.user">
           <div class="sidebar-user">
+            <div class="sidebar-user-name" v-if="authStore.businessName">{{ authStore.businessName }}</div>
             <div class="sidebar-user-email">{{ authStore.user.email }}</div>
             <div class="sidebar-user-plan" v-if="authStore.license">
               {{ planLabel(authStore.license.plan_type) }}
@@ -229,6 +237,7 @@ body {
 .version { font-size: 11px; color: var(--text-muted); }
 
 .sidebar-user { margin-bottom: 8px; }
+.sidebar-user-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 1px; }
 .sidebar-user-email { font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sidebar-user-plan { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 .plan-expiry { opacity: 0.7; }
