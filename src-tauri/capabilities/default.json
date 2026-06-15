@@ -8,6 +8,7 @@
   "permissions": [
     "core:default",
     "sql:default",
-    "opener:default"
+    "opener:default",
+    "deep-link:default"
   ]
 }
