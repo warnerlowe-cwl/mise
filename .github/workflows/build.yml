@@ -67,6 +67,17 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_MISE_API_URL: ${{ secrets.VITE_MISE_API_URL }}
+          # macOS code-signing + notarization. When these secrets are set, tauri-action
+          # signs the app with the Developer ID cert and notarizes it with Apple, so it
+          # opens with no Gatekeeper warning. When unset/empty, the build is unsigned
+          # (current behavior) — so adding these is safe before the secrets exist.
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: Mise ${{ github.ref_name }}
