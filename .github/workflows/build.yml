@@ -28,6 +28,11 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
 
+    # R2 upload is optional: only runs when the R2 secrets are configured. Without
+    # them, builds still attach to the GitHub Release (the default distribution).
+    env:
+      HAS_R2: ${{ secrets.R2_ACCESS_KEY_ID != '' && secrets.R2_BUCKET != '' }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -90,7 +95,7 @@ jobs:
           args: ${{ matrix.args }}
 
       - name: Upload to R2 (macOS)
-        if: matrix.platform == 'macos-latest'
+        if: matrix.platform == 'macos-latest' && env.HAS_R2 == 'true'
         env:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -105,7 +110,7 @@ jobs:
           FILE="$DMG" python3 .github/scripts/upload_r2.py
 
       - name: Upload to R2 (Windows)
-        if: matrix.platform == 'windows-latest'
+        if: matrix.platform == 'windows-latest' && env.HAS_R2 == 'true'
         env:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -120,7 +125,7 @@ jobs:
           python3 .github/scripts/upload_r2.py
 
       - name: Upload to R2 (Linux)
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-22.04' && env.HAS_R2 == 'true'
         env:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -137,6 +142,8 @@ jobs:
   publish:
     needs: [build]
     runs-on: ubuntu-latest
+    env:
+      HAS_R2: ${{ secrets.R2_ACCESS_KEY_ID != '' && secrets.R2_BUCKET != '' }}
     steps:
       - name: Publish GitHub Release
         env:
@@ -149,12 +156,16 @@ jobs:
             echo "Restaurant & hospitality management — by CrownWell Labs"
             echo ""
             echo "### Download"
-            echo "| Platform | Link |"
-            echo "|---|---|"
-            echo "| Windows 10/11 | [Mise-Setup-Windows.exe](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-Setup-Windows.exe) |"
-            echo "| macOS 12+ | [Mise-macOS.dmg](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-macOS.dmg) |"
-            echo "| Ubuntu/Debian | [Mise-linux-amd64.deb](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-linux-amd64.deb) |"
-            echo "| Linux (other) | [Mise-linux-x86_64.AppImage](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-linux-x86_64.AppImage) |"
+            if [ "$HAS_R2" = "true" ]; then
+              echo "| Platform | Link |"
+              echo "|---|---|"
+              echo "| Windows 10/11 | [Mise-Setup-Windows.exe](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-Setup-Windows.exe) |"
+              echo "| macOS 12+ | [Mise-macOS.dmg](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-macOS.dmg) |"
+              echo "| Ubuntu/Debian | [Mise-linux-amd64.deb](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-linux-amd64.deb) |"
+              echo "| Linux (other) | [Mise-linux-x86_64.AppImage](https://downloads.crownwelllabs.com/mise/${TAG}/Mise-linux-x86_64.AppImage) |"
+            else
+              echo "Installers for **Windows**, **macOS**, and **Linux** are attached to this release below."
+            fi
             echo ""
             echo "> Sign in at [crownwelllabs.com/downloads](https://crownwelllabs.com/downloads)"
           } > /tmp/notes.md
