@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Mise",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "com.crownwelllabs.mise",
   "build": {
     "frontendDist": "../dist",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Mise — Food Cost Management",
+        "title": "Mise \u2014 Food Cost Management",
         "width": 1280,
         "height": 800,
         "minWidth": 960,
@@ -38,7 +38,7 @@
     "category": "Productivity",
     "shortDescription": "Food cost management for professional kitchens",
     "longDescription": "Mise is a professional food cost management desktop application. Build and cost recipes from an ingredient library, track waste and spoilage, and get clear reports on where your food cost is going. Offline-first, one-time purchase.",
-    "copyright": "Copyright © 2026 CrownWell Labs",
+    "copyright": "Copyright \u00a9 2026 CrownWell Labs",
     "android": {
       "debugApplicationIdSuffix": ".debug"
     }
@@ -46,7 +46,9 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": ["mise"]
+        "schemes": [
+          "mise"
+        ]
       }
     }
   }
