@@ -28,10 +28,14 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
 
-    # R2 upload is optional: only runs when the R2 secrets are configured. Without
-    # them, builds still attach to the GitHub Release (the default distribution).
+    # Optional features keyed off whether their secrets exist:
+    #  - HAS_R2: upload installers to Cloudflare R2 (else they ship via the GitHub Release)
+    #  - HAS_APPLE: code-sign + notarize the macOS build (else it builds UNSIGNED, which
+    #    is what works until an Apple Developer ID cert is added — passing empty Apple
+    #    env vars makes tauri-action attempt signing and fail, so we omit them entirely).
     env:
       HAS_R2: ${{ secrets.R2_ACCESS_KEY_ID != '' && secrets.R2_BUCKET != '' }}
+      HAS_APPLE: ${{ secrets.APPLE_CERTIFICATE != '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -65,17 +69,15 @@ jobs:
       - name: Install frontend deps
         run: npm ci
 
-      - name: Build Tauri app
+      # macOS WITH a Developer ID cert → signed + notarized (runs only when APPLE_CERTIFICATE exists)
+      - name: Build Tauri app (macOS signed)
+        if: matrix.platform == 'macos-latest' && env.HAS_APPLE == 'true'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_MISE_API_URL: ${{ secrets.VITE_MISE_API_URL }}
-          # macOS code-signing + notarization. When these secrets are set, tauri-action
-          # signs the app with the Developer ID cert and notarizes it with Apple, so it
-          # opens with no Gatekeeper warning. When unset/empty, the build is unsigned
-          # (current behavior) — so adding these is safe before the secrets exist.
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
@@ -83,6 +85,26 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Mise ${{ github.ref_name }}
+          releaseBody: |
+            ## Mise ${{ github.ref_name }}
+            **Restaurant & hospitality management — by CrownWell Labs**
+            Download at [crownwelllabs.com/downloads](https://crownwelllabs.com/downloads)
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      # Everything else: Windows, Linux, and macOS-without-a-cert → UNSIGNED (no Apple env)
+      - name: Build Tauri app (unsigned)
+        if: matrix.platform != 'macos-latest' || env.HAS_APPLE != 'true'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_MISE_API_URL: ${{ secrets.VITE_MISE_API_URL }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: Mise ${{ github.ref_name }}
