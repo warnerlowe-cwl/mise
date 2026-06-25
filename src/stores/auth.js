@@ -43,15 +43,20 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function fetchLicense() {
-    const { data, error } = await supabase
-      .from('licenses')
-      .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    // Best-effort: never let a license-fetch hiccup (network, CORS, timeout) throw and
+    // break sign-in or block the app. If it fails, the user still gets in; premium
+    // features just won't unlock until the next successful fetch.
+    try {
+      const { data, error } = await supabase
+        .from('licenses')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
 
-    if (!error) license.value = data
+      if (!error) license.value = data
+    } catch (_) { /* leave license as-is; app stays accessible */ }
   }
 
   async function signIn(email, password) {
