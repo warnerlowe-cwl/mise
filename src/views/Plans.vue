@@ -134,13 +134,22 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { openUrl } from '@tauri-apps/plugin-opener'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+// Safety net: a logged-in user who actually holds a valid license must never be stranded
+// on this plans/paywall screen. Ensure the license is fetched, then send them to the app.
+// Belt-and-suspenders with the router guard, so any timing hiccup self-corrects.
+onMounted(async () => {
+  if (authStore.isLoggedIn && !authStore.license) await authStore.refreshLicense()
+  if (authStore.hasActiveLicense) router.replace('/dashboard')
+})
+watch(() => authStore.hasActiveLicense, (ok) => { if (ok) router.replace('/dashboard') })
 
 const today = new Date().toISOString().slice(0, 10)
 const seasonalStart = ref('')
