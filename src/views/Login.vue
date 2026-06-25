@@ -105,15 +105,13 @@ async function submit() {
         return
       }
       await authStore.signUp(email.value, password.value)
-      message.value = 'Account created! Choose a plan to activate your license.'
-      router.push('/plans')
+      router.push('/dashboard')
     } else {
       await authStore.signIn(email.value, password.value)
-      if (authStore.hasActiveLicense) {
-        router.push('/dashboard')
-      } else {
-        router.push('/plans')
-      }
+      // Always open the app after sign-in — no paywall gate. The license unlocks premium
+      // features inside; buying happens on the website. (This also dodges the race where
+      // the license hadn't finished loading and the user got bounced to /plans.)
+      router.push('/dashboard')
     }
   } catch (err) {
     error.value = err.message ?? 'Something went wrong. Please try again.'

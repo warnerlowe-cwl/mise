@@ -42,14 +42,14 @@ router.beforeEach(async (to) => {
 
   if (to.meta.public) return true
 
+  // Signing in is all it takes to get into the app — no paywall gate. Pricing/buying
+  // happens on the website (crownwelllabs.com), and the license simply unlocks premium
+  // features inside the app. This makes "stuck on the plans screen" impossible: a
+  // logged-in user always reaches the app. Load the license in the background so
+  // features that depend on it are accurate, but never block access on it.
   if (!auth.isLoggedIn) return '/login'
 
-  // Make sure the license has actually been fetched before gating on it. Without this,
-  // a just-signed-in user can be bounced to /plans while the license is still loading
-  // (a race), then never re-checked — so a valid license looks like "no license".
-  if (auth.isLoggedIn && !auth.license) await auth.refreshLicense()
-
-  if (!auth.hasActiveLicense) return '/plans'
+  if (auth.isLoggedIn && !auth.license) auth.refreshLicense()
 
   return true
 })
