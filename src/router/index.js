@@ -43,6 +43,12 @@ router.beforeEach(async (to) => {
   if (to.meta.public) return true
 
   if (!auth.isLoggedIn) return '/login'
+
+  // Make sure the license has actually been fetched before gating on it. Without this,
+  // a just-signed-in user can be bounced to /plans while the license is still loading
+  // (a race), then never re-checked — so a valid license looks like "no license".
+  if (auth.isLoggedIn && !auth.license) await auth.refreshLicense()
+
   if (!auth.hasActiveLicense) return '/plans'
 
   return true

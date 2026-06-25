@@ -34,8 +34,11 @@ export const useAuthStore = defineStore('auth', () => {
 
     supabase.auth.onAuthStateChange(async (_event, session) => {
       user.value = session?.user ?? null
-      license.value = null
+      // Only clear the license on sign-out. Previously this nulled it on every auth
+      // event (incl. sign-in/refresh) BEFORE re-fetching, creating a window where a
+      // logged-in user momentarily has no license — which bounced them to /plans.
       if (user.value) await fetchLicense()
+      else license.value = null
     })
   }
 
