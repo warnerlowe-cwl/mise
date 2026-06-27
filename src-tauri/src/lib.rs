@@ -4,6 +4,8 @@ pub fn run() {
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_sql::Builder::default().build())
     .plugin(tauri_plugin_deep_link::init())
+    .plugin(tauri_plugin_updater::Builder::new().build())
+    .plugin(tauri_plugin_process::init())
     .setup(|app| {
       // Register the mise:// URL scheme so the CrownWell Launcher (and any link)
       // can open the installed app. On macOS the scheme is declared via Info.plist

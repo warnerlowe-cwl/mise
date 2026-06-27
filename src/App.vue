@@ -98,10 +98,26 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import { useAuthStore } from './stores/auth'
+import { check } from '@tauri-apps/plugin-updater'
+import { relaunch } from '@tauri-apps/plugin-process'
 
 const authStore = useAuthStore()
+
+// Auto-update: on launch, quietly check for a newer signed release; if there is one,
+// download + install it and relaunch into the new version. Wrapped so it's a harmless
+// no-op in dev/web (the updater plugin only exists in the built desktop app) or offline.
+onMounted(async () => {
+  try {
+    const update = await check()
+    if (update && update.available) {
+      await update.downloadAndInstall()
+      await relaunch()
+    }
+  } catch (_) { /* updater unavailable or offline — ignore */ }
+})
 
 const PLAN_LABELS = {
   solo_lifetime:     'Solo Lifetime',
