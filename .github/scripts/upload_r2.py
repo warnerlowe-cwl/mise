@@ -18,6 +18,13 @@ if platform == 'macos':
         (src, 'mise/' + tag + '/Mise-macOS.dmg'),
         (src, 'mise/latest/Mise-macOS.dmg'),
     ]
+    # the auto-updater bundle (.app.tar.gz) — separate from the .dmg installer
+    apptar = os.environ.get('APPTARGZ')
+    if apptar:
+        uploads += [
+            (apptar, 'mise/' + tag + '/Mise-macOS.app.tar.gz'),
+            (apptar, 'mise/latest/Mise-macOS.app.tar.gz'),
+        ]
 elif platform == 'windows':
     src = os.environ['FILE']
     uploads = [

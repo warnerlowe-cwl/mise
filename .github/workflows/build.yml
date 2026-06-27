@@ -135,7 +135,8 @@ jobs:
           python3 -m pip install boto3 --quiet --break-system-packages
           DMG=$(find src-tauri/target/universal-apple-darwin/release/bundle/dmg -name "*.dmg" 2>/dev/null | head -1)
           [ -z "$DMG" ] && DMG=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" | head -1)
-          FILE="$DMG" python3 .github/scripts/upload_r2.py
+          APPTARGZ=$(find src-tauri/target -name "*.app.tar.gz" 2>/dev/null | head -1)
+          FILE="$DMG" APPTARGZ="$APPTARGZ" python3 .github/scripts/upload_r2.py
 
       - name: Upload to R2 (Windows)
         if: matrix.platform == 'windows-latest' && env.HAS_R2 == 'true'
@@ -173,40 +174,21 @@ jobs:
     env:
       HAS_R2: ${{ secrets.R2_ACCESS_KEY_ID != '' && secrets.R2_BUCKET != '' }}
     steps:
-      - name: Assemble updater manifest (latest.json)
+      # Publish the updater manifest to PUBLIC R2 (the repo is private, so the GitHub
+      # release URLs aren't reachable by end users). Points each platform at its R2 URL
+      # and uploads mise/latest.json with no-cache. Only runs when R2 is configured.
+      - name: Publish updater manifest to R2
+        if: env.HAS_R2 == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
         run: |
-          set -e
-          REPO=warnerlowe-cwl/mise
-          mkdir -p /tmp/sigs && cd /tmp/sigs
-          gh release view "$TAG" --repo "$REPO" --json assets -q '.assets[].name' > /tmp/assets.txt
-          python3 - <<'PY'
-          import json, subprocess, os, datetime
-          TAG=os.environ['TAG']; REPO='warnerlowe-cwl/mise'
-          names=[l.strip() for l in open('/tmp/assets.txt') if l.strip()]
-          base_url=f"https://github.com/{REPO}/releases/download/{TAG}/"
-          platforms={}
-          for n in names:
-              if not n.endswith('.sig'): continue
-              base=n[:-4]
-              subprocess.run(['gh','release','download',TAG,'--repo',REPO,'--pattern',n,'--dir','/tmp/sigs','--clobber'],check=True)
-              sig=open('/tmp/sigs/'+n).read().strip()
-              if base.endswith('.AppImage'):
-                  platforms['linux-x86_64']={"signature":sig,"url":base_url+base}
-              elif base.endswith('.app.tar.gz'):
-                  for k in ('darwin-aarch64','darwin-x86_64'):
-                      platforms[k]={"signature":sig,"url":base_url+base}
-              elif base.endswith('.exe'):
-                  platforms['windows-x86_64']={"signature":sig,"url":base_url+base}
-          manifest={"version":TAG.lstrip('v'),"notes":"A new version of Mise is available.",
-                    "pub_date":datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-                    "platforms":platforms}
-          open('/tmp/latest.json','w').write(json.dumps(manifest,indent=2))
-          print(json.dumps(manifest,indent=2))
-          PY
-          gh release upload "$TAG" /tmp/latest.json --repo "$REPO" --clobber
+          python3 -m pip install boto3 --quiet --break-system-packages
+          python3 .github/scripts/upload_manifest_r2.py
 
       - name: Publish GitHub Release
         env:
