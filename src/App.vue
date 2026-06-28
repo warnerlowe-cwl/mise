@@ -30,6 +30,7 @@
           </svg>
           Ingredients
         </RouterLink>
+        <div class="nav-section">Kitchen</div>
         <RouterLink to="/recipes" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 2h8l4 4v12a1 1 0 01-1 1H5a1 1 0 01-1-1V3a1 1 0 011-1z"/>
@@ -59,6 +60,7 @@
           </svg>
           Spec Sheets
         </RouterLink>
+        <div class="nav-section">Pricing &amp; profit</div>
         <RouterLink to="/pricing" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10 2v16"/>
@@ -79,6 +81,7 @@
           </svg>
           Plate Cost
         </RouterLink>
+        <div class="nav-section">Stock &amp; suppliers</div>
         <RouterLink to="/inventory" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 6l7-3 7 3v8l-7 3-7-3V6z"/>
@@ -107,6 +110,7 @@
           </svg>
           Allergens
         </RouterLink>
+        <div class="nav-section">Insights &amp; tools</div>
         <RouterLink to="/waste" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3.5 6h13M8.5 6V4.5h3V6"/>
@@ -129,6 +133,7 @@
           </svg>
           Reports
         </RouterLink>
+        <div class="nav-section">Setup</div>
         <RouterLink to="/settings" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="10" cy="10" r="2.6"/>
@@ -299,6 +304,17 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  overflow-y: auto;
+}
+
+.nav-section {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  opacity: 0.7;
+  padding: 12px 10px 4px;
 }
 
 .nav-item {
