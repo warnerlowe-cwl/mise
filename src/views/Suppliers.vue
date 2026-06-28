@@ -23,6 +23,8 @@
           <div style="display:flex; gap:8px; align-items:center">
             <button v-if="s.reorder.length" class="btn btn-primary" style="padding:6px 12px; font-size:13px"
               @click="copyOrder(s)">📋 Copy order</button>
+            <button v-if="s.name !== 'Unassigned'" class="btn btn-ghost" style="padding:6px 12px; font-size:13px"
+              @click="openAdjust(s)">% Adjust prices</button>
             <button class="btn btn-ghost" style="padding:6px 12px; font-size:13px" @click="toggle(s.name)">
               {{ open[s.name] ? 'Hide items' : 'View items' }}
             </button>
@@ -59,6 +61,29 @@
       {{ search ? 'No matches.' : 'No suppliers yet — add a supplier name on your ingredients and they\'ll group here.' }}
     </div>
 
+    <!-- Bulk price adjustment -->
+    <div v-if="adjust" class="modal-overlay" @click.self="adjust = null">
+      <div class="modal">
+        <h2 class="modal-title">Adjust prices — {{ adjust.name }}</h2>
+        <p style="color:var(--text-dim); font-size:13.5px; margin:0 0 16px; line-height:1.6">
+          Apply a percentage change to all <strong style="color:var(--text)">{{ adjust.items.length }}</strong>
+          ingredients from {{ adjust.name }}. Use a negative number to reduce. Each change is logged to Price Trends.
+        </p>
+        <label class="form-label">Change (%)</label>
+        <input v-model.number="adjustPct" type="number" step="any" class="form-input" placeholder="e.g. 5 or -3"
+          style="max-width:160px" @keydown.enter="applyAdjust" />
+        <p v-if="isFinitePct" style="font-size:13px; color:var(--text-dim); margin-top:10px">
+          Example: ${{ sampleOld.toFixed(2) }} → <strong :style="{ color: adjustPct >= 0 ? '#fca5a5' : '#6ee7b7' }">${{ sampleNew.toFixed(2) }}</strong>
+        </p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" @click="adjust = null" :disabled="applying">Cancel</button>
+          <button class="btn btn-primary" @click="applyAdjust" :disabled="applying || !isFinitePct || adjustPct == 0">
+            {{ applying ? 'Applying…' : 'Apply' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="card" style="margin-top:16px; padding:16px">
       <p style="color:var(--text-dim); font-size:13px; margin:0; line-height:1.6">
         💡 Mise groups ingredients by the <strong style="color:var(--text)">supplier</strong> you set on each one.
@@ -77,8 +102,41 @@ import { useIngredientsStore } from '../stores/ingredients'
 const store = useIngredientsStore()
 const search = ref('')
 const open = ref({})
+const adjust = ref(null)      // the supplier group being adjusted
+const adjustPct = ref(null)
+const applying = ref(false)
 
 onMounted(() => store.fetchAll())
+
+const isFinitePct = computed(() => Number.isFinite(Number(adjustPct.value)))
+const sampleOld = computed(() => Number(adjust.value?.items?.[0]?.cost_per_unit) || 0)
+const sampleNew = computed(() => round2(sampleOld.value * (1 + (Number(adjustPct.value) || 0) / 100)))
+
+function round2(n) {
+  return Math.round((Number(n) + Number.EPSILON) * 100) / 100
+}
+
+function openAdjust(s) {
+  adjust.value = s
+  adjustPct.value = null
+}
+
+async function applyAdjust() {
+  const pct = Number(adjustPct.value)
+  if (!Number.isFinite(pct) || pct === 0) return
+  applying.value = true
+  try {
+    for (const it of adjust.value.items) {
+      const newCost = round2(Number(it.cost_per_unit) * (1 + pct / 100))
+      await store.update(it.id, {
+        name: it.name, unit: it.unit, cost_per_unit: newCost, supplier: it.supplier, notes: it.notes,
+      })
+    }
+    adjust.value = null
+  } finally {
+    applying.value = false
+  }
+}
 
 function toggle(name) {
   open.value[name] = !open.value[name]
