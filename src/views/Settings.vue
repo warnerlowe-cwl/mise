@@ -25,6 +25,13 @@
         <label class="form-label">Email</label>
         <input class="form-input" type="text" :value="authStore.user?.email || ''" disabled />
       </div>
+      <div class="form-group">
+        <label class="form-label">Region</label>
+        <select v-model="region" class="form-input" @change="saveRegion">
+          <option v-for="r in REGIONS" :key="r.code" :value="r.code">{{ r.label }}</option>
+        </select>
+        <p class="settings-hint">Sets which real suppliers Mise suggests (Sysco, Brakes, etc.). You can always add your own.</p>
+      </div>
       <div class="settings-actions">
         <button class="btn btn-primary" :disabled="saving" @click="save">
           {{ saving ? 'Saving…' : 'Save changes' }}
@@ -62,9 +69,14 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { exportAll, importAll, getDb, seedSampleData } from '../db/database'
+import { REGIONS, getRegion, setRegion } from '../data/suppliers'
 
 const authStore = useAuthStore()
 const businessName = ref('')
+const region = ref(getRegion())
+function saveRegion() {
+  setRegion(region.value)
+}
 const saving = ref(false)
 const saved = ref(false)
 const error = ref('')

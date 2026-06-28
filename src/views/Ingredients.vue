@@ -137,7 +137,10 @@
 
         <div class="form-group">
           <label class="form-label">Supplier</label>
-          <input v-model="form.supplier" class="form-input" placeholder="e.g. Sysco, US Foods" />
+          <input v-model="form.supplier" class="form-input" list="supplier-suggestions" placeholder="e.g. Sysco, US Foods" />
+          <datalist id="supplier-suggestions">
+            <option v-for="s in supplierSuggestions" :key="s" :value="s" />
+          </datalist>
         </div>
 
         <div class="form-group">
@@ -235,8 +238,15 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useIngredientsStore } from '../stores/ingredients'
+import { getRegion, suppliersForRegion } from '../data/suppliers'
 
 const store = useIngredientsStore()
+
+// Realistic suppliers for the user's region + any they've already used.
+const supplierSuggestions = computed(() => {
+  const used = store.ingredients.map((i) => i.supplier).filter(Boolean)
+  return [...new Set([...used, ...suppliersForRegion(getRegion())])]
+})
 const search = ref('')
 const showModal = ref(false)
 const editingId = ref(null)
