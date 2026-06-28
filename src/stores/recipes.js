@@ -76,6 +76,16 @@ export const useRecipesStore = defineStore('recipes', {
       await this.fetchAll()
     },
 
+    // Menu pricing: persist a target food-cost % and/or a set menu price for a recipe.
+    async setPricing(id, { target_food_cost_pct, menu_price }) {
+      const db = await getDb()
+      await db.execute(
+        'UPDATE recipes SET target_food_cost_pct=?, menu_price=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+        [target_food_cost_pct ?? null, menu_price ?? null, id]
+      )
+      await this.fetchAll()
+    },
+
     async remove(id) {
       const db = await getDb()
       await db.execute('DELETE FROM recipes WHERE id=?', [id])

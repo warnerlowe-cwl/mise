@@ -89,4 +89,13 @@ async function initSchema() {
       ('cup', 'tbsp', 16),
       ('tbsp', 'cup', 0.0625)
   `)
+
+  // Migrations: add menu-pricing columns to existing recipes tables.
+  // SQLite has no "ADD COLUMN IF NOT EXISTS", so ignore the duplicate-column error.
+  for (const col of [
+    'target_food_cost_pct REAL',
+    'menu_price REAL',
+  ]) {
+    try { await db.execute(`ALTER TABLE recipes ADD COLUMN ${col}`) } catch (_) { /* already exists */ }
+  }
 }

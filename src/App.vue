@@ -38,6 +38,13 @@
           </svg>
           Recipes
         </RouterLink>
+        <RouterLink to="/pricing" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 2v16"/>
+            <path d="M13.5 5.5C13 4 11.7 3.5 10 3.5S7 4.2 7 5.6c0 3.2 6.5 1.6 6.5 4.9 0 1.5-1.4 2.2-3.5 2.2s-3.2-.7-3.7-2"/>
+          </svg>
+          Menu Pricing
+        </RouterLink>
         <RouterLink to="/waste" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3.5 6h13M8.5 6V4.5h3V6"/>
