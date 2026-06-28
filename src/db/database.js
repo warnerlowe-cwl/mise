@@ -16,6 +16,66 @@ const DATA_TABLES = [
   'recipe_ingredients', 'waste_log', 'price_history',
 ]
 
+// Seed a realistic starter set so every feature has data to show (onboarding/demo).
+// Appends; safe to skip if the user already has ingredients.
+export async function seedSampleData() {
+  const d = await getDb()
+  const daysAgo = (n) => {
+    const t = new Date(); t.setDate(t.getDate() - n)
+    return t.toISOString().slice(0, 19).replace('T', ' ')
+  }
+
+  // name, unit, cost, supplier, allergens, on_hand, par_level
+  const ingredients = [
+    ['Flour', 'kg', 0.80, "Baker's Supply", 'Gluten', 12, 10],
+    ['Butter', 'kg', 7.50, 'Dairy Co', 'Dairy', 4, 6],
+    ['Eggs', 'dozen', 3.20, 'Farm Fresh', 'Egg', 8, 5],
+    ['Sugar', 'kg', 1.10, "Baker's Supply", '', 20, 8],
+    ['Milk', 'L', 1.30, 'Dairy Co', 'Dairy', 6, 10],
+    ['Dark chocolate', 'kg', 9.00, 'Sweet Imports', 'Dairy,Soy', 2, 3],
+    ['Vanilla extract', 'L', 25.00, 'Sweet Imports', '', 1, 1],
+    ['Almonds', 'kg', 14.00, 'Sweet Imports', 'Tree nut', 1.5, 2],
+  ]
+  const id = {}
+  for (const [name, unit, cost, supplier, allergens, on_hand, par_level] of ingredients) {
+    await d.execute(
+      'INSERT INTO ingredients (name, unit, cost_per_unit, supplier, allergens, on_hand, par_level) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, unit, cost, supplier, allergens || null, on_hand, par_level]
+    )
+    const [row] = await d.select('SELECT last_insert_rowid() AS id')
+    id[name] = row.id
+    await d.execute('INSERT INTO price_history (ingredient_id, cost_per_unit, recorded_at) VALUES (?, ?, ?)', [row.id, cost, daysAgo(0)])
+  }
+  // A couple of price trends (cost creep) so Price Trends + alerts have something to show.
+  await d.execute('INSERT INTO price_history (ingredient_id, cost_per_unit, recorded_at) VALUES (?, ?, ?)', [id['Butter'], 6.50, daysAgo(60)])
+  await d.execute('INSERT INTO price_history (ingredient_id, cost_per_unit, recorded_at) VALUES (?, ?, ?)', [id['Butter'], 7.00, daysAgo(30)])
+  await d.execute('INSERT INTO price_history (ingredient_id, cost_per_unit, recorded_at) VALUES (?, ?, ?)', [id['Dark chocolate'], 8.00, daysAgo(45)])
+
+  // name, category, servings, menu_price, units_sold, prep_minutes, notes, [ [ingredient, qty, unit], ... ]
+  const recipes = [
+    ['Chocolate cake', 'Cakes', 12, 6.00, 80, 45, 'Cream butter and sugar, fold in melted chocolate, bake 35 min at 180°C.',
+      [['Flour', 0.4, 'kg'], ['Butter', 0.25, 'kg'], ['Eggs', 0.33, 'dozen'], ['Sugar', 0.35, 'kg'], ['Dark chocolate', 0.2, 'kg']]],
+    ['Vanilla cupcakes', 'Pastry', 24, 3.50, 200, 40, 'Mix, pipe, bake 18 min at 175°C. Finish with vanilla buttercream.',
+      [['Flour', 0.5, 'kg'], ['Butter', 0.3, 'kg'], ['Eggs', 0.5, 'dozen'], ['Sugar', 0.4, 'kg'], ['Vanilla extract', 0.02, 'L'], ['Milk', 0.3, 'L']]],
+    ['Almond croissant', 'Pastry', 10, 4.25, 60, 90, 'Laminated dough, almond cream, twice-baked.',
+      [['Flour', 0.6, 'kg'], ['Butter', 0.4, 'kg'], ['Almonds', 0.2, 'kg'], ['Sugar', 0.15, 'kg']]],
+  ]
+  for (const [name, category, servings, price, units, prep, notes, lines] of recipes) {
+    await d.execute(
+      'INSERT INTO recipes (name, category, servings, menu_price, units_sold, prep_minutes, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, category, servings, price, units, prep, notes]
+    )
+    const [row] = await d.select('SELECT last_insert_rowid() AS id')
+    for (const [ing, qty, unit] of lines) {
+      await d.execute(
+        'INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit) VALUES (?, ?, ?, ?)',
+        [row.id, id[ing], qty, unit]
+      )
+    }
+  }
+  return { ingredients: ingredients.length, recipes: recipes.length }
+}
+
 // Dump every table to a plain object — the full backup payload.
 export async function exportAll() {
   const d = await getDb()

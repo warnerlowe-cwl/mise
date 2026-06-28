@@ -44,6 +44,7 @@
         <button class="btn btn-primary" :disabled="busy" @click="exportBackup">⬇ Export backup (.json)</button>
         <button class="btn btn-ghost" :disabled="busy" @click="exportCsv">Export ingredients (.csv)</button>
         <button class="btn btn-ghost" :disabled="busy" @click="$refs.restoreInput.click()">↺ Restore from backup…</button>
+        <button class="btn btn-ghost" :disabled="busy" @click="loadSample">✨ Load sample data</button>
         <input ref="restoreInput" type="file" accept="application/json,.json" style="display:none" @change="restoreBackup" />
       </div>
       <p class="settings-ok" v-if="dataMsg">{{ dataMsg }}</p>
@@ -60,7 +61,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
-import { exportAll, importAll, getDb } from '../db/database'
+import { exportAll, importAll, getDb, seedSampleData } from '../db/database'
 
 const authStore = useAuthStore()
 const businessName = ref('')
@@ -118,6 +119,22 @@ async function exportCsv() {
   } catch (e) {
     dataErr.value = e?.message || 'CSV export failed'
   } finally {
+    busy.value = false
+  }
+}
+
+async function loadSample() {
+  dataMsg.value = ''; dataErr.value = ''
+  const db = await getDb()
+  const [n] = await db.select('SELECT COUNT(*) AS c FROM ingredients')
+  if (n.c > 0 && !confirm('This adds sample ingredients and recipes alongside your existing data. Continue?')) return
+  busy.value = true
+  try {
+    const r = await seedSampleData()
+    dataMsg.value = `✓ Added ${r.ingredients} ingredients and ${r.recipes} recipes. Reloading…`
+    setTimeout(() => window.location.reload(), 800)
+  } catch (e) {
+    dataErr.value = e?.message || 'Could not load sample data'
     busy.value = false
   }
 }
