@@ -27,6 +27,35 @@
       </div>
     </div>
 
+    <!-- Menu profit (from menu price × units sold) -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="section-header">Menu profit · based on units sold</div>
+      <template v-if="hasSales">
+        <div class="profit-row">
+          <div class="profit-stat"><div class="profit-val green">${{ revenue.toFixed(2) }}</div><div class="profit-label">Revenue</div></div>
+          <div class="profit-stat"><div class="profit-val red">${{ foodCost.toFixed(2) }}</div><div class="profit-label">Food cost</div></div>
+          <div class="profit-stat"><div class="profit-val">${{ grossProfit.toFixed(2) }}</div><div class="profit-label">Gross profit</div></div>
+          <div class="profit-stat"><div class="profit-val">{{ blendedPct.toFixed(1) }}%</div><div class="profit-label">Blended food cost</div></div>
+        </div>
+        <div style="margin-top:16px">
+          <div class="rank-sub" style="margin-bottom:8px; text-transform:uppercase; letter-spacing:0.05em">Top profit contributors</div>
+          <div v-for="(r, idx) in profitContributors" :key="r.id" class="rank-row">
+            <div class="rank-badge">{{ idx + 1 }}</div>
+            <div class="rank-info">
+              <div class="rank-name">{{ r.name }}</div>
+              <div class="rank-sub">{{ r.units }} sold · ${{ r.marginEach.toFixed(2) }}/each</div>
+            </div>
+            <div class="rank-end"><div class="amount-green">${{ r.profit.toFixed(2) }}</div></div>
+          </div>
+        </div>
+      </template>
+      <div v-else class="empty-state" style="padding: 24px 0">
+        <div class="empty-state-text">
+          Add menu prices (Menu Pricing) and units sold (Menu Engineering) to see revenue, profit, and blended food cost.
+        </div>
+      </div>
+    </div>
+
     <div class="report-grid">
       <!-- Recipe Cost Ranking -->
       <div class="card">
@@ -137,6 +166,25 @@ const avgCostPerServing = computed(() => {
   return (total / recipesStore.recipes.length).toFixed(2)
 })
 
+// Recipes with both a price and units sold drive the profit summary.
+const pricedSold = computed(() =>
+  recipesStore.recipes
+    .filter((r) => Number(r.menu_price) > 0 && Number(r.units_sold) > 0)
+    .map((r) => {
+      const units = Number(r.units_sold)
+      const price = Number(r.menu_price)
+      const costEach = Number(r.total_cost) / (r.servings || 1)
+      const marginEach = price - costEach
+      return { id: r.id, name: r.name, units, price, costEach, marginEach, profit: marginEach * units, revenue: price * units, cost: costEach * units }
+    })
+)
+const hasSales = computed(() => pricedSold.value.length > 0)
+const revenue = computed(() => pricedSold.value.reduce((s, r) => s + r.revenue, 0))
+const foodCost = computed(() => pricedSold.value.reduce((s, r) => s + r.cost, 0))
+const grossProfit = computed(() => revenue.value - foodCost.value)
+const blendedPct = computed(() => (revenue.value ? (foodCost.value / revenue.value) * 100 : 0))
+const profitContributors = computed(() => [...pricedSold.value].sort((a, b) => b.profit - a.profit).slice(0, 5))
+
 const wasteByIngredient = computed(() => {
   const map = {}
   for (const e of wasteStore.entries) {
@@ -188,4 +236,12 @@ function costPerServing(r) {
 
 .amount-green { color: var(--green); font-weight: 600; font-size: 13.5px; }
 .amount-accent { color: var(--accent); font-weight: 600; font-size: 13.5px; }
+
+.profit-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.profit-stat { text-align: center; padding: 8px 0; }
+.profit-val { font-size: 24px; font-weight: 800; }
+.profit-val.green { color: var(--green); }
+.profit-val.red { color: var(--red); }
+.profit-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+@media (max-width: 700px) { .profit-row { grid-template-columns: repeat(2, 1fr); } }
 </style>
