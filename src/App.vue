@@ -59,6 +59,12 @@
           </svg>
           Menu Pricing
         </RouterLink>
+        <RouterLink to="/menu" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 2l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4L5.5 15.7l.9-5L2.8 7.2l5-.7L10 2z"/>
+          </svg>
+          Menu Engineering
+        </RouterLink>
         <RouterLink to="/inventory" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 6l7-3 7 3v8l-7 3-7-3V6z"/>

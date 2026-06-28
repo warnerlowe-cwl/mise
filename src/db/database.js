@@ -135,6 +135,7 @@ async function initSchema() {
   for (const col of [
     'target_food_cost_pct REAL',
     'menu_price REAL',
+    'units_sold REAL',   // units sold in the period; drives menu-engineering popularity
   ]) {
     try { await db.execute(`ALTER TABLE recipes ADD COLUMN ${col}`) } catch (_) { /* already exists */ }
   }

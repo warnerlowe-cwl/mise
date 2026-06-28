@@ -86,6 +86,16 @@ export const useRecipesStore = defineStore('recipes', {
       await this.fetchAll()
     },
 
+    // Menu engineering: record units sold in the period for a recipe.
+    async setSales(id, units_sold) {
+      const db = await getDb()
+      await db.execute(
+        'UPDATE recipes SET units_sold=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+        [units_sold ?? null, id]
+      )
+      await this.fetchAll()
+    },
+
     async remove(id) {
       const db = await getDb()
       await db.execute('DELETE FROM recipes WHERE id=?', [id])
