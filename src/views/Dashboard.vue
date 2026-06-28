@@ -58,6 +58,31 @@
       </div>
     </div>
 
+    <!-- Action needed -->
+    <div class="card alert-panel" v-if="reorderItems.length || priceAlerts.length">
+      <div class="section-header">Action needed</div>
+      <div class="alert-grid">
+        <RouterLink to="/inventory" class="alert-item" v-if="reorderItems.length">
+          <div class="alert-dot alert-dot-amber"></div>
+          <div>
+            <div class="alert-title">{{ reorderItems.length }} item{{ reorderItems.length !== 1 ? 's' : '' }} to reorder</div>
+            <div class="alert-sub">{{ reorderItems.slice(0, 4).map(i => i.name).join(', ') }}{{ reorderItems.length > 4 ? '…' : '' }}</div>
+          </div>
+          <div class="alert-go">Inventory →</div>
+        </RouterLink>
+        <RouterLink to="/prices" class="alert-item" v-if="priceAlerts.length">
+          <div class="alert-dot alert-dot-red"></div>
+          <div>
+            <div class="alert-title">{{ priceAlerts.length }} price increase{{ priceAlerts.length !== 1 ? 's' : '' }}</div>
+            <div class="alert-sub">
+              {{ priceAlerts.slice(0, 3).map(p => `${p.name} +${p.pct.toFixed(0)}%`).join(', ') }}{{ priceAlerts.length > 3 ? '…' : '' }}
+            </div>
+          </div>
+          <div class="alert-go">Price Trends →</div>
+        </RouterLink>
+      </div>
+    </div>
+
     <!-- Panels -->
     <div class="panel-grid">
       <div class="card">
@@ -129,6 +154,27 @@ onMounted(async () => {
     recipesStore.fetchAll(),
     wasteStore.fetchAll(),
   ])
+  await ingredientsStore.loadPriceHistory()
+})
+
+// Ingredients below their par level — these need reordering.
+const reorderItems = computed(() =>
+  ingredientsStore.ingredients.filter(
+    (i) => i.par_level != null && (Number(i.on_hand) || 0) < Number(i.par_level)
+  )
+)
+
+// Ingredients whose most recent price is higher than the one before it.
+const priceAlerts = computed(() => {
+  const out = []
+  for (const i of ingredientsStore.ingredients) {
+    const h = ingredientsStore.priceHistory[i.id] || []
+    if (h.length < 2) continue
+    const last = Number(h[h.length - 1].cost_per_unit)
+    const prev = Number(h[h.length - 2].cost_per_unit)
+    if (prev > 0 && last > prev) out.push({ id: i.id, name: i.name, pct: ((last - prev) / prev) * 100 })
+  }
+  return out.sort((a, b) => b.pct - a.pct)
 })
 
 const topRecipes = computed(() =>
@@ -158,6 +204,22 @@ function costPerServing(r) {
 
 <style scoped>
 .panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.alert-panel { margin-bottom: 20px; }
+.alert-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.alert-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+  text-decoration: none; color: inherit; transition: border-color 0.15s;
+}
+.alert-item:hover { border-color: var(--text-muted); }
+.alert-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.alert-dot-amber { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.18); }
+.alert-dot-red { background: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.18); }
+.alert-title { font-weight: 600; color: var(--text); font-size: 13.5px; }
+.alert-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.alert-go { margin-left: auto; font-size: 12px; color: var(--accent); font-weight: 600; white-space: nowrap; }
+@media (max-width: 700px) { .alert-grid { grid-template-columns: 1fr; } }
 
 .stat-value-red { color: var(--red); }
 .stat-value-green { color: var(--green); }
