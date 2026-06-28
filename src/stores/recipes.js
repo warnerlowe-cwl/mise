@@ -36,7 +36,7 @@ export const useRecipesStore = defineStore('recipes', {
     async getIngredients(recipeId) {
       const db = await getDb()
       return await db.select(`
-        SELECT ri.*, i.name AS ingredient_name, i.cost_per_unit
+        SELECT ri.*, i.name AS ingredient_name, i.cost_per_unit, i.allergens
         FROM recipe_ingredients ri
         JOIN ingredients i ON ri.ingredient_id = i.id
         WHERE ri.recipe_id = ?

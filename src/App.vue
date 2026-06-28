@@ -66,6 +66,13 @@
           </svg>
           Price Trends
         </RouterLink>
+        <RouterLink to="/allergens" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="10" cy="10" r="7.5"/>
+            <path d="M10 6.5v4M10 13.3v.2"/>
+          </svg>
+          Allergens
+        </RouterLink>
         <RouterLink to="/waste" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3.5 6h13M8.5 6V4.5h3V6"/>

@@ -81,6 +81,17 @@ export const useIngredientsStore = defineStore('ingredients', {
       await this.fetchAll()
     },
 
+    // Allergens: store as a comma-separated string (accepts an array or string).
+    async setAllergens(id, allergens) {
+      const db = await getDb()
+      const value = Array.isArray(allergens) ? allergens.join(',') : (allergens || '')
+      await db.execute(
+        'UPDATE ingredients SET allergens=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+        [value || null, id]
+      )
+      await this.fetchAll()
+    },
+
     async update(id, ingredient) {
       const db = await getDb()
       const prev = this.ingredients.find((i) => i.id === id)
