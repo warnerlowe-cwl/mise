@@ -45,6 +45,13 @@
           </svg>
           Batch Calculator
         </RouterLink>
+        <RouterLink to="/prep" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 3h12v3H4zM5 6l1 11h8l1-11"/>
+            <path d="M8 9v5M12 9v5"/>
+          </svg>
+          Prep Planner
+        </RouterLink>
         <RouterLink to="/pricing" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10 2v16"/>

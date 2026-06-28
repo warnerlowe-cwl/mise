@@ -9,6 +9,7 @@ import PriceTrends from '../views/PriceTrends.vue'
 import Scaling from '../views/Scaling.vue'
 import Allergens from '../views/Allergens.vue'
 import Suppliers from '../views/Suppliers.vue'
+import PrepPlanner from '../views/PrepPlanner.vue'
 import WasteTracker from '../views/WasteTracker.vue'
 import Conversions from '../views/Conversions.vue'
 import Reports from '../views/Reports.vue'
@@ -27,6 +28,7 @@ const routes = [
   { path: '/inventory',   component: Inventory,   meta: { title: 'Inventory' } },
   { path: '/prices',      component: PriceTrends, meta: { title: 'Price Trends' } },
   { path: '/scale',       component: Scaling,    meta: { title: 'Batch Calculator' } },
+  { path: '/prep',        component: PrepPlanner, meta: { title: 'Prep Planner' } },
   { path: '/allergens',   component: Allergens,  meta: { title: 'Allergens' } },
   { path: '/suppliers',   component: Suppliers,  meta: { title: 'Suppliers' } },
   { path: '/waste',       component: WasteTracker, meta: { title: 'Waste Tracker' } },
