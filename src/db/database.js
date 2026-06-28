@@ -136,6 +136,7 @@ async function initSchema() {
     'target_food_cost_pct REAL',
     'menu_price REAL',
     'units_sold REAL',   // units sold in the period; drives menu-engineering popularity
+    'prep_minutes REAL', // labor time per batch; drives plate-cost labor calc
   ]) {
     try { await db.execute(`ALTER TABLE recipes ADD COLUMN ${col}`) } catch (_) { /* already exists */ }
   }

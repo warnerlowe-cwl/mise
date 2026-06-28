@@ -72,6 +72,13 @@
           </svg>
           Menu Engineering
         </RouterLink>
+        <RouterLink to="/plate" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="10" cy="10" r="7.5"/>
+            <circle cx="10" cy="10" r="3"/>
+          </svg>
+          Plate Cost
+        </RouterLink>
         <RouterLink to="/inventory" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 6l7-3 7 3v8l-7 3-7-3V6z"/>

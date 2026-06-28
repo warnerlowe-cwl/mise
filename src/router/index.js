@@ -12,6 +12,7 @@ import Suppliers from '../views/Suppliers.vue'
 import PrepPlanner from '../views/PrepPlanner.vue'
 import MenuEngineering from '../views/MenuEngineering.vue'
 import SpecSheets from '../views/SpecSheets.vue'
+import PlateCost from '../views/PlateCost.vue'
 import WasteTracker from '../views/WasteTracker.vue'
 import Conversions from '../views/Conversions.vue'
 import Reports from '../views/Reports.vue'
@@ -28,6 +29,7 @@ const routes = [
   { path: '/recipes',     component: Recipes,     meta: { title: 'Recipes' } },
   { path: '/pricing',     component: MenuPricing, meta: { title: 'Menu Pricing' } },
   { path: '/menu',        component: MenuEngineering, meta: { title: 'Menu Engineering' } },
+  { path: '/plate',       component: PlateCost,  meta: { title: 'Plate Cost' } },
   { path: '/inventory',   component: Inventory,   meta: { title: 'Inventory' } },
   { path: '/prices',      component: PriceTrends, meta: { title: 'Price Trends' } },
   { path: '/scale',       component: Scaling,    meta: { title: 'Batch Calculator' } },

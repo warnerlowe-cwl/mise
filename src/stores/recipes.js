@@ -86,6 +86,16 @@ export const useRecipesStore = defineStore('recipes', {
       await this.fetchAll()
     },
 
+    // Plate cost: record labor minutes per batch for a recipe.
+    async setPrep(id, prep_minutes) {
+      const db = await getDb()
+      await db.execute(
+        'UPDATE recipes SET prep_minutes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+        [prep_minutes ?? null, id]
+      )
+      await this.fetchAll()
+    },
+
     // Menu engineering: record units sold in the period for a recipe.
     async setSales(id, units_sold) {
       const db = await getDb()
