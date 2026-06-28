@@ -59,6 +59,13 @@
           </svg>
           Inventory
         </RouterLink>
+        <RouterLink to="/suppliers" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 7h11v7H2zM13 9h3l2 2.5V14h-5z"/>
+            <circle cx="5.5" cy="14.5" r="1.5"/><circle cx="14.5" cy="14.5" r="1.5"/>
+          </svg>
+          Suppliers
+        </RouterLink>
         <RouterLink to="/prices" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 14l4-4 3 3 7-7"/>
