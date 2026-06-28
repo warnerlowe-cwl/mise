@@ -52,6 +52,13 @@
           </svg>
           Prep Planner
         </RouterLink>
+        <RouterLink to="/specs" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 13V3h7l3 3v7"/>
+            <path d="M6 13h9v4H6zM6 6h5M6 8.5h3"/>
+          </svg>
+          Spec Sheets
+        </RouterLink>
         <RouterLink to="/pricing" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10 2v16"/>
@@ -197,6 +204,17 @@ function formatExpiry(dt) {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Print isolation: when printing, show only the marked .printable area (recipe spec sheets). */
+@media print {
+  body * { visibility: hidden; }
+  .printable, .printable * { visibility: visible; }
+  .printable {
+    position: absolute; top: 0; left: 0; width: 100%;
+    color: #000; background: #fff;
+  }
+  .no-print { display: none !important; }
 }
 
 :root {

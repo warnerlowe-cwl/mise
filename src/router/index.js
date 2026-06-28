@@ -11,6 +11,7 @@ import Allergens from '../views/Allergens.vue'
 import Suppliers from '../views/Suppliers.vue'
 import PrepPlanner from '../views/PrepPlanner.vue'
 import MenuEngineering from '../views/MenuEngineering.vue'
+import SpecSheets from '../views/SpecSheets.vue'
 import WasteTracker from '../views/WasteTracker.vue'
 import Conversions from '../views/Conversions.vue'
 import Reports from '../views/Reports.vue'
@@ -31,6 +32,7 @@ const routes = [
   { path: '/prices',      component: PriceTrends, meta: { title: 'Price Trends' } },
   { path: '/scale',       component: Scaling,    meta: { title: 'Batch Calculator' } },
   { path: '/prep',        component: PrepPlanner, meta: { title: 'Prep Planner' } },
+  { path: '/specs',       component: SpecSheets, meta: { title: 'Spec Sheets' } },
   { path: '/allergens',   component: Allergens,  meta: { title: 'Allergens' } },
   { path: '/suppliers',   component: Suppliers,  meta: { title: 'Suppliers' } },
   { path: '/waste',       component: WasteTracker, meta: { title: 'Waste Tracker' } },
