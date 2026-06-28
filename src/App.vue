@@ -234,7 +234,10 @@ function formatExpiry(dt) {
     color: #000; background: #fff;
   }
   .no-print { display: none !important; }
+  .print-only { display: block !important; }
 }
+/* Hidden on screen, revealed only when printing (e.g. the stock count sheet). */
+.print-only { display: none; }
 
 :root {
   --bg: #0f1117;

@@ -5,7 +5,10 @@
         <h1 class="page-title">Inventory</h1>
         <p class="page-subtitle">Track stock and get a reorder list when items run low</p>
       </div>
-      <button class="btn btn-ghost" @click="copyReorder" :disabled="!reorderList.length">📋 Copy reorder list</button>
+      <div style="display:flex; gap:8px">
+        <button class="btn btn-ghost" @click="printCount" :disabled="!enriched.length">🖨 Print count sheet</button>
+        <button class="btn btn-ghost" @click="copyReorder" :disabled="!reorderList.length">📋 Copy reorder list</button>
+      </div>
     </div>
 
     <div class="inv-summary">
@@ -79,6 +82,26 @@
         <strong style="color:var(--text)">Copy reorder list</strong> to paste it into an email or text to your supplier.
       </p>
     </div>
+
+    <!-- Printable stock count sheet (hidden on screen, shows only when printing) -->
+    <div class="printable print-only count-sheet">
+      <div class="cs-head">
+        <h2>Stock Count Sheet</h2>
+        <div class="cs-date">Date: __________  Counted by: __________</div>
+      </div>
+      <table class="cs-table">
+        <thead><tr><th>Ingredient</th><th>Supplier</th><th>Unit</th><th>Par</th><th>Count</th></tr></thead>
+        <tbody>
+          <tr v-for="r in countSheet" :key="r.id">
+            <td>{{ r.name }}</td>
+            <td>{{ r.supplier || '' }}</td>
+            <td>{{ r.unit }}</td>
+            <td>{{ r.par_level ?? '' }}</td>
+            <td class="cs-blank"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
@@ -148,6 +171,17 @@ async function setPar(r, val) {
   await store.setStock(r.id, { on_hand: r.on_hand ?? null, par_level: v })
 }
 
+// Count sheet ordered by supplier then name, so counting follows the storeroom.
+const countSheet = computed(() =>
+  [...store.ingredients].sort(
+    (a, b) => (a.supplier || '~').localeCompare(b.supplier || '~') || a.name.localeCompare(b.name)
+  )
+)
+
+function printCount() {
+  window.print()
+}
+
 async function copyReorder() {
   const lines = reorderList.value.map(
     (r) => `${r.name}: order ${r.reorderQty} ${r.unit}${r.supplier ? ' (' + r.supplier + ')' : ''}`
@@ -168,4 +202,14 @@ async function copyReorder() {
 .inv-stat-val { font-size: 26px; font-weight: 800; }
 .inv-stat-label { color: var(--text-dim); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
 @media (max-width: 600px) { .inv-summary { grid-template-columns: 1fr; } }
+
+/* Printable stock count sheet — plain paper styling */
+.count-sheet { color: #000; background: #fff; padding: 24px 28px; font-family: -apple-system, system-ui, sans-serif; }
+.cs-head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
+.cs-head h2 { margin: 0; font-size: 20px; }
+.cs-date { font-size: 12px; color: #444; }
+.cs-table { width: 100%; border-collapse: collapse; }
+.cs-table th, .cs-table td { text-align: left; padding: 6px 8px; border: 1px solid #999; font-size: 12.5px; }
+.cs-table th { background: #f0f0f0; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.04em; }
+.cs-blank { width: 90px; }
 </style>
