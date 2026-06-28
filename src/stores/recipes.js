@@ -86,6 +86,31 @@ export const useRecipesStore = defineStore('recipes', {
       await this.fetchAll()
     },
 
+    // Clone a recipe and all its ingredient lines (chefs riff on a base recipe).
+    async duplicate(id) {
+      const db = await getDb()
+      const orig = this.recipes.find((r) => r.id === id)
+      if (!orig) return
+      const lines = await this.getIngredients(id)
+      await db.execute(
+        `INSERT INTO recipes (name, category, servings, notes, menu_price, target_food_cost_pct, units_sold, prep_minutes)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          `${orig.name} (copy)`, orig.category ?? null, orig.servings ?? 1, orig.notes ?? null,
+          orig.menu_price ?? null, orig.target_food_cost_pct ?? null, orig.units_sold ?? null, orig.prep_minutes ?? null,
+        ]
+      )
+      const [row] = await db.select('SELECT last_insert_rowid() AS id')
+      for (const l of lines) {
+        await db.execute(
+          'INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit) VALUES (?, ?, ?, ?)',
+          [row.id, l.ingredient_id, l.quantity, l.unit]
+        )
+      }
+      await this.fetchAll()
+      return row.id
+    },
+
     // Plate cost: record labor minutes per batch for a recipe.
     async setPrep(id, prep_minutes) {
       const db = await getDb()

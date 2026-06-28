@@ -44,6 +44,7 @@
             <td>
               <div style="display: flex; gap: 6px; justify-content: flex-end">
                 <button class="btn btn-ghost" style="padding: 5px 10px" @click="openEdit(r)">Edit</button>
+                <button class="btn btn-ghost" style="padding: 5px 10px" @click="duplicate(r)" title="Duplicate this recipe">Duplicate</button>
                 <button class="btn btn-danger" style="padding: 5px 10px" @click="confirmDelete(r)">Delete</button>
               </div>
             </td>
@@ -244,6 +245,10 @@ async function save() {
 
 function confirmDelete(r) {
   deleteTarget.value = r
+}
+
+async function duplicate(r) {
+  await store.duplicate(r.id)
 }
 
 async function doDelete() {
