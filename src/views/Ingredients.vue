@@ -108,6 +108,33 @@
           </div>
         </div>
 
+        <!-- Pack sizing: buy by the bag/bottle/sleeve, use by the g/ml/each -->
+        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:14px">
+          <div style="font-weight:600; font-size:13px; margin-bottom:4px">
+            How you buy it <span style="color:var(--text-dim); font-weight:400">— optional, fills in the cost for you</span>
+          </div>
+          <div style="color:var(--text-dim); font-size:12px; margin-bottom:10px">
+            e.g. a 1&nbsp;kg bag of beans you use by the gram, or a 750&nbsp;ml bottle you pour by the ml.
+          </div>
+          <div style="display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:12px">
+            <div class="form-group" style="margin:0">
+              <label class="form-label">Pack</label>
+              <input v-model="form.pack_label" class="form-input" placeholder="e.g. 1kg bag" />
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label">Pack price ($)</label>
+              <input v-model="form.pack_price" class="form-input" type="number" step="0.01" min="0" placeholder="0.00" />
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label">Pack size{{ form.unit ? ' (' + form.unit + ')' : '' }}</label>
+              <input v-model="form.pack_size" class="form-input" type="number" step="any" min="0" placeholder="0" />
+            </div>
+          </div>
+          <div v-if="packDerivedCost != null" style="margin-top:10px; font-size:13px; color:var(--green)">
+            = <strong>${{ packDerivedCost.toFixed(4) }}</strong> per {{ form.unit || 'unit' }} — filled into Cost per Unit above
+          </div>
+        </div>
+
         <div class="form-group">
           <label class="form-label">Supplier</label>
           <input v-model="form.supplier" class="form-input" placeholder="e.g. Sysco, US Foods" />
@@ -206,7 +233,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useIngredientsStore } from '../stores/ingredients'
 
 const store = useIngredientsStore()
@@ -215,7 +242,19 @@ const showModal = ref(false)
 const editingId = ref(null)
 const deleteTarget = ref(null)
 
-const form = ref({ name: '', unit: '', cost_per_unit: '', supplier: '', notes: '' })
+const emptyForm = () => ({ name: '', unit: '', cost_per_unit: '', supplier: '', notes: '', pack_label: '', pack_price: '', pack_size: '' })
+const form = ref(emptyForm())
+
+// Derive cost-per-unit from a pack: pack price ÷ how many usage-units are in the pack.
+const packDerivedCost = computed(() => {
+  const p = Number(form.value.pack_price)
+  const s = Number(form.value.pack_size)
+  return p > 0 && s > 0 ? p / s : null
+})
+// When the pack is filled in, auto-fill the cost field (kept to 4dp for small per-unit costs).
+watch(packDerivedCost, (v) => {
+  if (v != null) form.value.cost_per_unit = Math.round((v + Number.EPSILON) * 10000) / 10000
+})
 
 const filtered = computed(() => {
   if (!search.value) return store.ingredients
@@ -233,13 +272,17 @@ onMounted(() => store.fetchAll())
 
 function openAdd() {
   editingId.value = null
-  form.value = { name: '', unit: '', cost_per_unit: '', supplier: '', notes: '' }
+  form.value = emptyForm()
   showModal.value = true
 }
 
 function openEdit(item) {
   editingId.value = item.id
-  form.value = { name: item.name, unit: item.unit, cost_per_unit: item.cost_per_unit, supplier: item.supplier || '', notes: item.notes || '' }
+  form.value = {
+    name: item.name, unit: item.unit, cost_per_unit: item.cost_per_unit,
+    supplier: item.supplier || '', notes: item.notes || '',
+    pack_label: item.pack_label || '', pack_price: item.pack_price ?? '', pack_size: item.pack_size ?? '',
+  }
   showModal.value = true
 }
 
@@ -250,10 +293,17 @@ function closeModal() {
 
 async function save() {
   if (!isValid.value) return
+  const numOrNull = (v) => (v === '' || v == null ? null : Number(v))
+  const payload = {
+    ...form.value,
+    pack_price: numOrNull(form.value.pack_price),
+    pack_size: numOrNull(form.value.pack_size),
+    pack_label: (form.value.pack_label || '').trim() || null,
+  }
   if (editingId.value) {
-    await store.update(editingId.value, form.value)
+    await store.update(editingId.value, payload)
   } else {
-    await store.add(form.value)
+    await store.add(payload)
   }
   closeModal()
 }

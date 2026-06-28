@@ -206,6 +206,9 @@ async function initSchema() {
     'on_hand REAL',     // current quantity in stock (in the ingredient's unit)
     'par_level REAL',   // minimum to keep on hand; below this = reorder
     'allergens TEXT',   // comma-separated allergen tags; recipes inherit the union
+    'pack_price REAL',  // what you pay for one purchase pack (e.g. a 1kg bag)
+    'pack_size REAL',   // how many usage-units (the `unit`) are in one pack
+    'pack_label TEXT',  // optional human label for the pack, e.g. "1kg bag", "750ml bottle"
   ]) {
     try { await db.execute(`ALTER TABLE ingredients ADD COLUMN ${col}`) } catch (_) { /* already exists */ }
   }

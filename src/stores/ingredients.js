@@ -48,8 +48,11 @@ export const useIngredientsStore = defineStore('ingredients', {
     async add(ingredient) {
       const db = await getDb()
       await db.execute(
-        'INSERT INTO ingredients (name, unit, cost_per_unit, supplier, notes) VALUES (?, ?, ?, ?, ?)',
-        [ingredient.name, ingredient.unit, ingredient.cost_per_unit, ingredient.supplier || null, ingredient.notes || null]
+        'INSERT INTO ingredients (name, unit, cost_per_unit, supplier, notes, pack_price, pack_size, pack_label) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          ingredient.name, ingredient.unit, ingredient.cost_per_unit, ingredient.supplier || null, ingredient.notes || null,
+          ingredient.pack_price ?? null, ingredient.pack_size ?? null, ingredient.pack_label || null,
+        ]
       )
       const [row] = await db.select('SELECT last_insert_rowid() AS id')
       if (row?.id != null) await this._logPrice(db, row.id, ingredient.cost_per_unit)
@@ -96,8 +99,11 @@ export const useIngredientsStore = defineStore('ingredients', {
       const db = await getDb()
       const prev = this.ingredients.find((i) => i.id === id)
       await db.execute(
-        'UPDATE ingredients SET name=?, unit=?, cost_per_unit=?, supplier=?, notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
-        [ingredient.name, ingredient.unit, ingredient.cost_per_unit, ingredient.supplier || null, ingredient.notes || null, id]
+        'UPDATE ingredients SET name=?, unit=?, cost_per_unit=?, supplier=?, notes=?, pack_price=?, pack_size=?, pack_label=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+        [
+          ingredient.name, ingredient.unit, ingredient.cost_per_unit, ingredient.supplier || null, ingredient.notes || null,
+          ingredient.pack_price ?? null, ingredient.pack_size ?? null, ingredient.pack_label || null, id,
+        ]
       )
       // Only record a new price point when the cost actually changed.
       if (!prev || Number(prev.cost_per_unit) !== Number(ingredient.cost_per_unit)) {
