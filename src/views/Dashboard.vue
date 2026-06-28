@@ -7,6 +7,25 @@
       </div>
     </div>
 
+    <!-- First-run welcome -->
+    <div v-if="isEmpty" class="welcome">
+      <div class="welcome-emoji">👋</div>
+      <h2 class="welcome-title">Welcome to Mise</h2>
+      <p class="welcome-text">
+        Cost your recipes, price your menu, track stock and suppliers, and catch cost creep before it
+        eats your margin. Want to see it all in action first?
+      </p>
+      <div class="welcome-actions">
+        <button class="btn btn-primary" :disabled="seeding" @click="loadSample">
+          {{ seeding ? 'Loading…' : '✨ Load a sample kitchen' }}
+        </button>
+        <button class="btn btn-ghost" @click="$router.push('/ingredients')">Start with my own ingredients →</button>
+      </div>
+      <p v-if="seedErr" class="welcome-err">{{ seedErr }}</p>
+    </div>
+
+    <template v-else>
+
     <!-- Stat Cards -->
     <div class="stat-grid">
       <div class="stat-card">
@@ -135,18 +154,40 @@
         <div class="empty-state-text">No ingredients yet</div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useIngredientsStore } from '../stores/ingredients'
 import { useRecipesStore } from '../stores/recipes'
 import { useWasteStore } from '../stores/waste'
+import { seedSampleData } from '../db/database'
 
 const ingredientsStore = useIngredientsStore()
 const recipesStore = useRecipesStore()
 const wasteStore = useWasteStore()
+
+const seeding = ref(false)
+const seedErr = ref('')
+
+// Brand-new install: nothing entered yet → show the welcome hero.
+const isEmpty = computed(() =>
+  ingredientsStore.ingredients.length === 0 && recipesStore.recipes.length === 0
+)
+
+async function loadSample() {
+  seedErr.value = ''
+  seeding.value = true
+  try {
+    await seedSampleData()
+    window.location.reload()
+  } catch (e) {
+    seedErr.value = e?.message || 'Could not load sample data'
+    seeding.value = false
+  }
+}
 
 onMounted(async () => {
   await Promise.all([
@@ -204,6 +245,16 @@ function costPerServing(r) {
 
 <style scoped>
 .panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.welcome {
+  text-align: center; max-width: 560px; margin: 40px auto;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 40px 32px;
+}
+.welcome-emoji { font-size: 40px; }
+.welcome-title { font-size: 24px; margin: 8px 0 10px; }
+.welcome-text { color: var(--text-dim); font-size: 14.5px; line-height: 1.6; margin: 0 auto 22px; }
+.welcome-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.welcome-err { color: var(--red); font-size: 13px; margin-top: 12px; }
 
 .alert-panel { margin-bottom: 20px; }
 .alert-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
