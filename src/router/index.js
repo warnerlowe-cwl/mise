@@ -4,6 +4,7 @@ import Dashboard from '../views/Dashboard.vue'
 import Ingredients from '../views/Ingredients.vue'
 import Recipes from '../views/Recipes.vue'
 import MenuPricing from '../views/MenuPricing.vue'
+import Inventory from '../views/Inventory.vue'
 import WasteTracker from '../views/WasteTracker.vue'
 import Conversions from '../views/Conversions.vue'
 import Reports from '../views/Reports.vue'
@@ -19,6 +20,7 @@ const routes = [
   { path: '/ingredients', component: Ingredients, meta: { title: 'Ingredients' } },
   { path: '/recipes',     component: Recipes,     meta: { title: 'Recipes' } },
   { path: '/pricing',     component: MenuPricing, meta: { title: 'Menu Pricing' } },
+  { path: '/inventory',   component: Inventory,   meta: { title: 'Inventory' } },
   { path: '/waste',       component: WasteTracker, meta: { title: 'Waste Tracker' } },
   { path: '/conversions', component: Conversions, meta: { title: 'Conversions' } },
   { path: '/reports',     component: Reports,     meta: { title: 'Reports' } },

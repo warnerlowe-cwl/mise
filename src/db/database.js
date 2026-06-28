@@ -98,4 +98,12 @@ async function initSchema() {
   ]) {
     try { await db.execute(`ALTER TABLE recipes ADD COLUMN ${col}`) } catch (_) { /* already exists */ }
   }
+
+  // Inventory & par levels live on the ingredient.
+  for (const col of [
+    'on_hand REAL',     // current quantity in stock (in the ingredient's unit)
+    'par_level REAL',   // minimum to keep on hand; below this = reorder
+  ]) {
+    try { await db.execute(`ALTER TABLE ingredients ADD COLUMN ${col}`) } catch (_) { /* already exists */ }
+  }
 }

@@ -47,6 +47,16 @@ export const useIngredientsStore = defineStore('ingredients', {
       return rows.length
     },
 
+    // Inventory: set current on-hand quantity and/or par level for an ingredient.
+    async setStock(id, { on_hand, par_level }) {
+      const db = await getDb()
+      await db.execute(
+        'UPDATE ingredients SET on_hand=?, par_level=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+        [on_hand ?? null, par_level ?? null, id]
+      )
+      await this.fetchAll()
+    },
+
     async update(id, ingredient) {
       const db = await getDb()
       await db.execute(
