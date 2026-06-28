@@ -34,6 +34,19 @@ export const useIngredientsStore = defineStore('ingredients', {
       await this.fetchAll()
     },
 
+    // Bulk insert (CSV import). Inserts all rows, then refreshes once.
+    async addMany(rows) {
+      const db = await getDb()
+      for (const r of rows) {
+        await db.execute(
+          'INSERT INTO ingredients (name, unit, cost_per_unit, supplier, notes) VALUES (?, ?, ?, ?, ?)',
+          [r.name, r.unit, r.cost_per_unit, r.supplier || null, r.notes || null]
+        )
+      }
+      await this.fetchAll()
+      return rows.length
+    },
+
     async update(id, ingredient) {
       const db = await getDb()
       await db.execute(

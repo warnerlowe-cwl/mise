@@ -5,7 +5,10 @@
         <h1 class="page-title">Ingredients</h1>
         <p class="page-subtitle">Manage your ingredient list and unit costs</p>
       </div>
-      <button class="btn btn-primary" @click="openAdd">+ Add Ingredient</button>
+      <div style="display:flex; gap:8px">
+        <button class="btn btn-ghost" @click="openImport">⬆ Import CSV</button>
+        <button class="btn btn-primary" @click="openAdd">+ Add Ingredient</button>
+      </div>
     </div>
 
     <!-- Search -->
@@ -138,6 +141,67 @@
         </div>
       </div>
     </div>
+
+    <!-- CSV Import -->
+    <div class="modal-overlay" v-if="showImport" @click.self="closeImport">
+      <div class="modal" style="width: 560px">
+        <h2 class="modal-title">Import Ingredients from a Spreadsheet</h2>
+        <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 16px">
+          Upload a CSV with columns <strong style="color: var(--text)">name, unit, cost_per_unit, supplier, notes</strong>.
+          New to this? <a href="#" @click.prevent="downloadTemplate" style="color: var(--amber)">Download a template</a> to fill in.
+        </p>
+
+        <!-- drop zone -->
+        <div
+          class="import-drop"
+          :class="{ 'import-drop-active': dragOver }"
+          @dragover.prevent="dragOver = true"
+          @dragleave.prevent="dragOver = false"
+          @drop.prevent="onDrop"
+          @click="fileInput && fileInput.click()"
+        >
+          <input ref="fileInput" type="file" accept=".csv,text/csv" style="display:none" @change="onFile" />
+          <div v-if="!parsed">
+            <div style="font-size: 28px; margin-bottom: 6px">📄</div>
+            <div style="color: var(--text)">Drop your CSV here, or click to choose a file</div>
+            <div style="color: var(--text-dim); font-size: 12px; margin-top: 4px">.csv from Excel or Google Sheets</div>
+          </div>
+          <div v-else>
+            <div style="color: var(--text)"><strong>{{ fileName }}</strong></div>
+            <div style="color: var(--text-dim); font-size: 12px; margin-top: 4px">{{ parsed.valid.length }} ready · {{ parsed.errors.length }} skipped</div>
+          </div>
+        </div>
+
+        <!-- preview -->
+        <div v-if="parsed && parsed.valid.length" style="margin-top: 14px; max-height: 200px; overflow: auto">
+          <table class="table">
+            <thead><tr><th>Name</th><th>Unit</th><th>Cost</th><th>Supplier</th></tr></thead>
+            <tbody>
+              <tr v-for="(r, i) in parsed.valid.slice(0, 50)" :key="i">
+                <td>{{ r.name }}</td>
+                <td><span class="badge badge-amber">{{ r.unit }}</span></td>
+                <td>${{ Number(r.cost_per_unit).toFixed(2) }}</td>
+                <td style="color: var(--text-dim)">{{ r.supplier || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-if="parsed.valid.length > 50" style="color: var(--text-dim); font-size: 12px; padding: 6px">…and {{ parsed.valid.length - 50 }} more</div>
+        </div>
+
+        <!-- skipped rows -->
+        <div v-if="parsed && parsed.errors.length" style="margin-top: 12px; background: rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.25); border-radius:8px; padding:10px; font-size:12px; color:#fca5a5; max-height:110px; overflow:auto">
+          <strong>{{ parsed.errors.length }} row(s) skipped:</strong>
+          <div v-for="(e, i) in parsed.errors.slice(0, 20)" :key="i">{{ e }}</div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-ghost" @click="closeImport">Cancel</button>
+          <button class="btn btn-primary" @click="runImport" :disabled="!parsed || !parsed.valid.length || importing">
+            {{ importing ? 'Importing…' : (parsed && parsed.valid.length ? `Import ${parsed.valid.length} ingredient${parsed.valid.length === 1 ? '' : 's'}` : 'Import') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -202,4 +266,138 @@ async function doDelete() {
   await store.remove(deleteTarget.value.id)
   deleteTarget.value = null
 }
+
+// ── CSV import ──────────────────────────────────────────────
+const showImport = ref(false)
+const parsed = ref(null)
+const fileName = ref('')
+const dragOver = ref(false)
+const importing = ref(false)
+const fileInput = ref(null)
+
+function openImport() {
+  parsed.value = null
+  fileName.value = ''
+  dragOver.value = false
+  showImport.value = true
+}
+function closeImport() {
+  showImport.value = false
+}
+
+function onFile(e) {
+  const f = e.target.files && e.target.files[0]
+  if (f) readFile(f)
+}
+function onDrop(e) {
+  dragOver.value = false
+  const f = e.dataTransfer.files && e.dataTransfer.files[0]
+  if (f) readFile(f)
+}
+function readFile(f) {
+  fileName.value = f.name
+  const reader = new FileReader()
+  reader.onload = () => { parsed.value = processCSV(String(reader.result || '')) }
+  reader.readAsText(f)
+}
+
+// RFC-4180-ish CSV parser (handles quotes, commas inside quotes, CRLF)
+function parseCSV(text) {
+  const rows = []
+  let cur = [], field = '', q = false
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    if (q) {
+      if (c === '"' && text[i + 1] === '"') { field += '"'; i++ }
+      else if (c === '"') q = false
+      else field += c
+    } else {
+      if (c === '"') q = true
+      else if (c === ',') { cur.push(field); field = '' }
+      else if (c === '\n') { cur.push(field); rows.push(cur); cur = []; field = '' }
+      else if (c !== '\r') field += c
+    }
+  }
+  if (field !== '' || cur.length) { cur.push(field); rows.push(cur) }
+  return rows.filter(r => r.some(x => x.trim() !== ''))
+}
+
+function processCSV(text) {
+  const rows = parseCSV(text)
+  if (!rows.length) return { valid: [], errors: ['The file looks empty.'] }
+  const header = rows[0].map(h => h.trim().toLowerCase())
+  const find = re => header.findIndex(h => re.test(h))
+  const idx = {
+    name: find(/name|ingredient|item/),
+    unit: find(/unit|measure/),
+    cost: find(/cost|price|\$/),
+    supplier: find(/supplier|vendor/),
+    notes: find(/note/),
+  }
+  const hasHeader = idx.name >= 0 || idx.cost >= 0
+  const dataRows = hasHeader ? rows.slice(1) : rows
+  const valid = [], errors = []
+  dataRows.forEach((r, n) => {
+    const cell = (key, pos) => ((hasHeader && idx[key] >= 0 ? r[idx[key]] : (hasHeader ? '' : r[pos])) || '').trim()
+    const name = cell('name', 0)
+    const rawCost = (hasHeader ? (idx.cost >= 0 ? r[idx.cost] : '') : r[2]) || ''
+    const cost = parseFloat(String(rawCost).replace(/[$,\s]/g, ''))
+    if (!name) { errors.push(`Row ${n + 1}: no name`); return }
+    if (isNaN(cost)) { errors.push(`Row ${n + 1} (${name}): cost "${String(rawCost).trim()}" isn't a number`); return }
+    valid.push({
+      name,
+      unit: cell('unit', 1).toLowerCase() || 'each',
+      cost_per_unit: cost,
+      supplier: cell('supplier', 3),
+      notes: cell('notes', 4),
+    })
+  })
+  return { valid, errors }
+}
+
+function downloadTemplate() {
+  const csv =
+    'name,unit,cost_per_unit,supplier,notes\n' +
+    'Chicken Breast,lb,3.49,Sysco,Boneless skinless\n' +
+    'Olive Oil,fl oz,0.42,US Foods,Extra virgin\n' +
+    'All-Purpose Flour,lb,0.65,,\n'
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'mise-ingredients-template.csv'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
+async function runImport() {
+  if (!parsed.value || !parsed.value.valid.length) return
+  importing.value = true
+  try {
+    await store.addMany(parsed.value.valid)
+    closeImport()
+  } catch (e) {
+    alert('Import failed: ' + (e.message || e))
+  } finally {
+    importing.value = false
+  }
+}
 </script>
+
+<style scoped>
+.import-drop {
+  border: 2px dashed var(--border, rgba(255, 255, 255, 0.15));
+  border-radius: 12px;
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.import-drop:hover,
+.import-drop-active {
+  border-color: var(--amber, #fbbf24);
+  background: rgba(251, 191, 36, 0.06);
+}
+</style>
