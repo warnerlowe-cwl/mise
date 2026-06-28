@@ -81,6 +81,13 @@
           </svg>
           Plate Cost
         </RouterLink>
+        <RouterLink to="/menu-card" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="2.5" width="12" height="15" rx="1.5"/>
+            <path d="M7 6h6M7 9h6M7 12h4"/>
+          </svg>
+          Menu Card
+        </RouterLink>
         <div class="nav-section">Stock &amp; suppliers</div>
         <RouterLink to="/inventory" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
