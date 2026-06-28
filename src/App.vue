@@ -38,6 +38,13 @@
           </svg>
           Recipes
         </RouterLink>
+        <RouterLink to="/scale" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 3v14M3 10h14"/>
+            <path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/>
+          </svg>
+          Batch Calculator
+        </RouterLink>
         <RouterLink to="/pricing" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10 2v16"/>
