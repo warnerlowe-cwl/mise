@@ -1,6 +1,6 @@
 [package]
 name = "mise"
-version = "0.2.15"
+version = "0.2.16"
 description = "Food cost management for professional kitchens"
 authors = ["CrownWell Labs"]
 license = "LicenseRef-Proprietary"

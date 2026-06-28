@@ -10,6 +10,46 @@ export async function getDb() {
   return db
 }
 
+// All user-data tables, parents before children (so a restore inserts in FK-safe order).
+const DATA_TABLES = [
+  'ingredients', 'recipes', 'conversions',
+  'recipe_ingredients', 'waste_log', 'price_history',
+]
+
+// Dump every table to a plain object — the full backup payload.
+export async function exportAll() {
+  const d = await getDb()
+  const tables = {}
+  for (const t of DATA_TABLES) {
+    tables[t] = await d.select(`SELECT * FROM ${t}`)
+  }
+  return { app: 'mise', schema: 1, exported_at: new Date().toISOString(), tables }
+}
+
+// Replace all data with a backup payload. Ids are preserved so recipe↔ingredient
+// links survive. Wipes children first, then reinserts parents-first.
+export async function importAll(payload) {
+  const d = await getDb()
+  const tables = payload?.tables || {}
+  for (const t of [...DATA_TABLES].reverse()) {
+    await d.execute(`DELETE FROM ${t}`)
+  }
+  let inserted = 0
+  for (const t of DATA_TABLES) {
+    for (const row of tables[t] || []) {
+      const cols = Object.keys(row)
+      if (!cols.length) continue
+      const placeholders = cols.map(() => '?').join(', ')
+      await d.execute(
+        `INSERT INTO ${t} (${cols.join(', ')}) VALUES (${placeholders})`,
+        cols.map((c) => row[c])
+      )
+      inserted++
+    }
+  }
+  return inserted
+}
+
 async function initSchema() {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS ingredients (
