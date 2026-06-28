@@ -106,4 +106,24 @@ async function initSchema() {
   ]) {
     try { await db.execute(`ALTER TABLE ingredients ADD COLUMN ${col}`) } catch (_) { /* already exists */ }
   }
+
+  // Supplier price history — one row each time an ingredient's cost changes, so we can
+  // chart cost creep over time and flag the biggest movers.
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS price_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ingredient_id INTEGER NOT NULL,
+      cost_per_unit REAL NOT NULL,
+      recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE
+    )
+  `)
+  // Seed a baseline point for any existing ingredient with no history yet, so a price
+  // tracked since day one still shows a starting price (dated from when it was created).
+  await db.execute(`
+    INSERT INTO price_history (ingredient_id, cost_per_unit, recorded_at)
+    SELECT id, cost_per_unit, COALESCE(created_at, CURRENT_TIMESTAMP)
+    FROM ingredients
+    WHERE id NOT IN (SELECT DISTINCT ingredient_id FROM price_history)
+  `)
 }
