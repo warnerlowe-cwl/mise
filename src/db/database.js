@@ -1,10 +1,25 @@
 import Database from '@tauri-apps/plugin-sql'
 
 let db = null
+let activeUser = 'guest'
+
+// Scope the local database to the signed-in account, so each account keeps its own
+// separate data on the same computer (e.g. a test account vs a real store). The auth
+// store calls this whenever the signed-in user changes.
+export function setActiveUser(userId) {
+  const key = userId || 'guest'
+  if (key === activeUser) return
+  const wasLoaded = db !== null
+  activeUser = key
+  db = null
+  // If a database was already in use, this is a live account switch — reload so every
+  // store reinitialises against the new account's database with no leftover data.
+  if (wasLoaded && typeof window !== 'undefined') window.location.reload()
+}
 
 export async function getDb() {
   if (!db) {
-    db = await Database.load('sqlite:mise.db')
+    db = await Database.load(`sqlite:mise_${activeUser}.db`)
     await initSchema()
   }
   return db

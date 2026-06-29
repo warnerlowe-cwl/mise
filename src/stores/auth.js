@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
+import { setActiveUser } from '../db/database'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -27,6 +28,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       user.value = session?.user ?? null
+      setActiveUser(user.value?.id)        // scope local DB to this account
       if (user.value) await fetchLicense()
     } finally {
       loading.value = false
@@ -34,6 +36,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     supabase.auth.onAuthStateChange(async (_event, session) => {
       user.value = session?.user ?? null
+      setActiveUser(user.value?.id)        // switch DB when the account changes
       // Only clear the license on sign-out. Previously this nulled it on every auth
       // event (incl. sign-in/refresh) BEFORE re-fetching, creating a window where a
       // logged-in user momentarily has no license — which bounced them to /plans.
@@ -63,6 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
     user.value = data.user
+    setActiveUser(user.value?.id)          // scope DB now, before the app navigates + loads data
     await fetchLicense()
     return data
   }
@@ -71,6 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) throw error
     user.value = data.user
+    setActiveUser(user.value?.id)
     return data
   }
 
@@ -78,6 +83,7 @@ export const useAuthStore = defineStore('auth', () => {
     await supabase.auth.signOut()
     user.value = null
     license.value = null
+    setActiveUser(null)                    // back to the guest DB
   }
 
   async function refreshLicense() {
