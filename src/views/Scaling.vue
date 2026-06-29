@@ -71,7 +71,7 @@
               <td style="font-weight:600">{{ l.ingredient_name }}</td>
               <td style="color:var(--text-dim)">{{ fmtQty(l.quantity) }} {{ l.unit }}</td>
               <td style="font-weight:600">{{ fmtQty(l.quantity * multiplier) }} {{ l.unit }}</td>
-              <td>${{ (l.quantity * multiplier * (Number(l.cost_per_unit) || 0)).toFixed(2) }}</td>
+              <td>${{ (l.quantity * multiplier * (Number(l.effective_cost ?? l.cost_per_unit) || 0)).toFixed(2) }}</td>
             </tr>
           </tbody>
           <tfoot>
@@ -141,7 +141,7 @@ function setFactor(f) {
 }
 
 const scaledCost = computed(() =>
-  lines.value.reduce((s, l) => s + l.quantity * multiplier.value * (Number(l.cost_per_unit) || 0), 0)
+  lines.value.reduce((s, l) => s + l.quantity * multiplier.value * (Number(l.effective_cost ?? l.cost_per_unit) || 0), 0)
 )
 const costPerServing = computed(() => {
   const t = Number(targetServings.value)

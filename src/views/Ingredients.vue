@@ -136,6 +136,14 @@
           <div v-if="packDerivedCost != null" style="margin-top:10px; font-size:13px; color:var(--green)">
             = <strong>${{ packDerivedCost.toFixed(4) }}</strong> per {{ form.unit || 'unit' }} — filled into Cost per Unit above
           </div>
+          <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+            <label class="form-label" style="margin:0">Usable yield %</label>
+            <input v-model="form.yield_pct" class="form-input" type="number" min="1" max="100" step="1" placeholder="100" style="width:90px" />
+            <span style="color:var(--text-dim); font-size:12px">
+              trim/loss — e.g. 80% if you toss 20%.
+              <template v-if="effectiveCost != null">True cost <strong style="color:var(--text)">${{ effectiveCost.toFixed(2) }}</strong>/{{ form.unit || 'unit' }}</template>
+            </span>
+          </div>
         </div>
 
         <div class="form-group">
@@ -326,8 +334,16 @@ const showModal = ref(false)
 const editingId = ref(null)
 const deleteTarget = ref(null)
 
-const emptyForm = () => ({ name: '', unit: '', cost_per_unit: '', supplier: '', notes: '', pack_label: '', pack_price: '', pack_size: '' })
+const emptyForm = () => ({ name: '', unit: '', cost_per_unit: '', supplier: '', notes: '', pack_label: '', pack_price: '', pack_size: '', yield_pct: '' })
 const form = ref(emptyForm())
+
+// Cost after trim/loss: cost ÷ (yield% / 100). Shown when yield is below 100.
+const effectiveCost = computed(() => {
+  const c = Number(form.value.cost_per_unit)
+  const y = Number(form.value.yield_pct)
+  if (!(c > 0) || !(y > 0) || y >= 100) return null
+  return c / (y / 100)
+})
 
 // Derive cost-per-unit from a pack: pack price ÷ how many usage-units are in the pack.
 const packDerivedCost = computed(() => {
@@ -366,6 +382,7 @@ function openEdit(item) {
     name: item.name, unit: item.unit, cost_per_unit: item.cost_per_unit,
     supplier: item.supplier || '', notes: item.notes || '',
     pack_label: item.pack_label || '', pack_price: item.pack_price ?? '', pack_size: item.pack_size ?? '',
+    yield_pct: item.yield_pct ?? '',
   }
   showModal.value = true
 }
@@ -383,6 +400,7 @@ async function save() {
     pack_price: numOrNull(form.value.pack_price),
     pack_size: numOrNull(form.value.pack_size),
     pack_label: (form.value.pack_label || '').trim() || null,
+    yield_pct: numOrNull(form.value.yield_pct),
   }
   if (editingId.value) {
     await store.update(editingId.value, payload)

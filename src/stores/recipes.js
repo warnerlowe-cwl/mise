@@ -17,9 +17,11 @@ export const useRecipesStore = defineStore('recipes', {
       this.loading = true
       try {
         const db = await getDb()
+        // Cost divides by usable yield: a 80%-yield item effectively costs 1/0.8 more per
+        // usable unit. NULL/0 yield = treat as 100% (no loss).
         this.recipes = await db.select(`
           SELECT r.*,
-            COALESCE(SUM(ri.quantity * i.cost_per_unit), 0) AS total_cost
+            COALESCE(SUM(ri.quantity * i.cost_per_unit / (COALESCE(NULLIF(i.yield_pct,0),100)/100.0)), 0) AS total_cost
           FROM recipes r
           LEFT JOIN recipe_ingredients ri ON r.id = ri.recipe_id
           LEFT JOIN ingredients i ON ri.ingredient_id = i.id
@@ -36,7 +38,8 @@ export const useRecipesStore = defineStore('recipes', {
     async getIngredients(recipeId) {
       const db = await getDb()
       return await db.select(`
-        SELECT ri.*, i.name AS ingredient_name, i.cost_per_unit, i.allergens
+        SELECT ri.*, i.name AS ingredient_name, i.cost_per_unit, i.allergens,
+          (i.cost_per_unit / (COALESCE(NULLIF(i.yield_pct,0),100)/100.0)) AS effective_cost
         FROM recipe_ingredients ri
         JOIN ingredients i ON ri.ingredient_id = i.id
         WHERE ri.recipe_id = ?

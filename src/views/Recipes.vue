@@ -207,7 +207,10 @@ const estimatedCost = computed(() => {
   let total = 0
   for (const line of lines.value) {
     const ing = ingredientsStore.ingredients.find(i => i.id === Number(line.ingredient_id))
-    if (ing && line.quantity) total += Number(line.quantity) * Number(ing.cost_per_unit)
+    if (ing && line.quantity) {
+      const yieldFrac = (Number(ing.yield_pct) || 100) / 100
+      total += Number(line.quantity) * Number(ing.cost_per_unit) / (yieldFrac || 1)
+    }
   }
   return total.toFixed(2)
 })

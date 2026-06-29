@@ -106,7 +106,7 @@ const shopping = computed(() => {
     for (const l of recipeLines.value[r.id] || []) {
       const key = l.ingredient_id + '|' + (l.unit || '')
       const qty = Number(l.quantity) * factor
-      const cost = qty * (Number(l.cost_per_unit) || 0)
+      const cost = qty * (Number(l.effective_cost ?? l.cost_per_unit) || 0)
       if (!agg[key]) agg[key] = { key, name: l.ingredient_name, unit: l.unit, qty: 0, cost: 0 }
       agg[key].qty += qty
       agg[key].cost += cost

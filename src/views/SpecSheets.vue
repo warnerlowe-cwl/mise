@@ -50,7 +50,7 @@
             <tr v-for="l in lines" :key="l.id">
               <td>{{ l.ingredient_name }}</td>
               <td>{{ fmt(l.quantity) }} {{ l.unit }}</td>
-              <td class="spec-r">${{ (l.quantity * (Number(l.cost_per_unit) || 0)).toFixed(2) }}</td>
+              <td class="spec-r">${{ (l.quantity * (Number(l.effective_cost ?? l.cost_per_unit) || 0)).toFixed(2) }}</td>
             </tr>
           </tbody>
           <tfoot>
@@ -104,7 +104,7 @@ const allergens = computed(() => {
 })
 
 const totalCost = computed(() =>
-  lines.value.reduce((s, l) => s + l.quantity * (Number(l.cost_per_unit) || 0), 0)
+  lines.value.reduce((s, l) => s + l.quantity * (Number(l.effective_cost ?? l.cost_per_unit) || 0), 0)
 )
 const costPerServing = computed(() => totalCost.value / (Number(recipe.value?.servings) || 1))
 const margin = computed(() => (Number(recipe.value?.menu_price) || 0) - costPerServing.value)
