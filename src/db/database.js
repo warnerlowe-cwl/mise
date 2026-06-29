@@ -14,6 +14,7 @@ export async function getDb() {
 const DATA_TABLES = [
   'ingredients', 'recipes', 'conversions',
   'recipe_ingredients', 'waste_log', 'price_history',
+  'supplier_prices', 'recipe_components', 'recipe_sizes',
 ]
 
 // Seed a realistic starter set so every feature has data to show (onboarding/demo).
@@ -25,52 +26,73 @@ export async function seedSampleData() {
     return t.toISOString().slice(0, 19).replace('T', ' ')
   }
 
-  // name, unit, cost, supplier, allergens, on_hand, par_level
+  // name, unit, cost, supplier, allergens, on_hand, par, pack_label, pack_price, pack_size, yield_pct
+  // Shows off pack sizing (buy big, use small) and yield (trim loss on almonds/strawberries).
   const ingredients = [
-    ['Flour', 'kg', 0.80, "Baker's Supply", 'Gluten', 12, 10],
-    ['Butter', 'kg', 7.50, 'Dairy Co', 'Dairy', 4, 6],
-    ['Eggs', 'dozen', 3.20, 'Farm Fresh', 'Egg', 8, 5],
-    ['Sugar', 'kg', 1.10, "Baker's Supply", '', 20, 8],
-    ['Milk', 'L', 1.30, 'Dairy Co', 'Dairy', 6, 10],
-    ['Dark chocolate', 'kg', 9.00, 'Sweet Imports', 'Dairy,Soy', 2, 3],
-    ['Vanilla extract', 'L', 25.00, 'Sweet Imports', '', 1, 1],
-    ['Almonds', 'kg', 14.00, 'Sweet Imports', 'Tree nut', 1.5, 2],
+    ['Flour', 'kg', 0.80, "Baker's Supply", 'Gluten', 12, 10, '25kg sack', 20.00, 25, null],
+    ['Butter', 'kg', 7.50, 'Dairy Co', 'Dairy', 4, 6, '1kg block', 7.50, 1, null],
+    ['Eggs', 'dozen', 3.20, 'Farm Fresh', 'Egg', 8, 5, null, null, null, null],
+    ['Sugar', 'kg', 1.10, "Baker's Supply", '', 20, 8, '10kg bag', 11.00, 10, null],
+    ['Milk', 'L', 1.30, 'Dairy Co', 'Dairy', 6, 10, '2L carton', 2.60, 2, null],
+    ['Dark chocolate', 'kg', 9.00, 'Sweet Imports', 'Dairy,Soy', 2, 3, null, null, null, null],
+    ['Vanilla extract', 'L', 25.00, 'Sweet Imports', '', 1, 1, '1L bottle', 25.00, 1, null],
+    ['Almonds', 'kg', 14.00, 'Sweet Imports', 'Tree nut', 1.5, 2, null, null, null, 85],
+    ['Strawberries', 'kg', 6.00, 'Local farm/market', '', 2, 3, null, null, null, 90],
+    ['Espresso beans', 'kg', 30.00, 'Local roaster', '', 3, 2, '1kg bag', 30.00, 1, null],
   ]
   const id = {}
-  for (const [name, unit, cost, supplier, allergens, on_hand, par_level] of ingredients) {
+  for (const [name, unit, cost, supplier, allergens, on_hand, par, pl, pp, ps, yld] of ingredients) {
     await d.execute(
-      'INSERT INTO ingredients (name, unit, cost_per_unit, supplier, allergens, on_hand, par_level) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [name, unit, cost, supplier, allergens || null, on_hand, par_level]
+      'INSERT INTO ingredients (name, unit, cost_per_unit, supplier, allergens, on_hand, par_level, pack_label, pack_price, pack_size, yield_pct) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, unit, cost, supplier, allergens || null, on_hand, par, pl, pp, ps, yld]
     )
     const [row] = await d.select('SELECT last_insert_rowid() AS id')
     id[name] = row.id
     await d.execute('INSERT INTO price_history (ingredient_id, cost_per_unit, recorded_at) VALUES (?, ?, ?)', [row.id, cost, daysAgo(0)])
   }
-  // A couple of price trends (cost creep) so Price Trends + alerts have something to show.
+  // A few price trends (cost creep) so Price Trends + alerts have something to show.
   await d.execute('INSERT INTO price_history (ingredient_id, cost_per_unit, recorded_at) VALUES (?, ?, ?)', [id['Butter'], 6.50, daysAgo(60)])
   await d.execute('INSERT INTO price_history (ingredient_id, cost_per_unit, recorded_at) VALUES (?, ?, ?)', [id['Butter'], 7.00, daysAgo(30)])
   await d.execute('INSERT INTO price_history (ingredient_id, cost_per_unit, recorded_at) VALUES (?, ?, ?)', [id['Dark chocolate'], 8.00, daysAgo(45)])
+  await d.execute('INSERT INTO price_history (ingredient_id, cost_per_unit, recorded_at) VALUES (?, ?, ?)', [id['Espresso beans'], 27.00, daysAgo(50)])
 
-  // name, category, servings, menu_price, units_sold, prep_minutes, notes, [ [ingredient, qty, unit], ... ]
+  // A couple of supplier price quotes so Compare Prices has something to compare.
+  await d.execute('INSERT INTO supplier_prices (ingredient_id, supplier, price) VALUES (?, ?, ?)', [id['Flour'], 'Restaurant Depot', 0.92])
+  await d.execute('INSERT INTO supplier_prices (ingredient_id, supplier, price) VALUES (?, ?, ?)', [id['Milk'], 'Local farm/market', 1.15])
+
+  // name, category, servings, price, units, prep, notes, lines, components[[child, servingsUsed]], sizes[[label, mult, price]]
+  // Buttercream is a SUB-RECIPE used by the cake + cupcakes; the Latte shows SIZES.
   const recipes = [
-    ['Chocolate cake', 'Cakes', 12, 6.00, 80, 45, 'Cream butter and sugar, fold in melted chocolate, bake 35 min at 180°C.',
-      [['Flour', 0.4, 'kg'], ['Butter', 0.25, 'kg'], ['Eggs', 0.33, 'dozen'], ['Sugar', 0.35, 'kg'], ['Dark chocolate', 0.2, 'kg']]],
-    ['Vanilla cupcakes', 'Pastry', 24, 3.50, 200, 40, 'Mix, pipe, bake 18 min at 175°C. Finish with vanilla buttercream.',
-      [['Flour', 0.5, 'kg'], ['Butter', 0.3, 'kg'], ['Eggs', 0.5, 'dozen'], ['Sugar', 0.4, 'kg'], ['Vanilla extract', 0.02, 'L'], ['Milk', 0.3, 'L']]],
+    ['Vanilla buttercream', 'Components', 20, null, null, 15, 'Beat butter smooth, add sugar, vanilla and a splash of milk.',
+      [['Butter', 1, 'kg'], ['Sugar', 0.6, 'kg'], ['Vanilla extract', 0.03, 'L'], ['Milk', 0.1, 'L']], [], []],
+    ['Chocolate cake', 'Cakes', 12, 6.00, 80, 45, 'Cream butter and sugar, fold in melted chocolate, bake 35 min at 180°C. Finish with buttercream.',
+      [['Flour', 0.4, 'kg'], ['Butter', 0.25, 'kg'], ['Eggs', 0.33, 'dozen'], ['Sugar', 0.35, 'kg'], ['Dark chocolate', 0.2, 'kg']],
+      [['Vanilla buttercream', 4]], []],
+    ['Vanilla cupcakes', 'Pastry', 24, 3.50, 200, 40, 'Mix, pipe, bake 18 min at 175°C. Top with vanilla buttercream.',
+      [['Flour', 0.5, 'kg'], ['Eggs', 0.5, 'dozen'], ['Sugar', 0.4, 'kg'], ['Milk', 0.3, 'L']],
+      [['Vanilla buttercream', 8]], []],
     ['Almond croissant', 'Pastry', 10, 4.25, 60, 90, 'Laminated dough, almond cream, twice-baked.',
-      [['Flour', 0.6, 'kg'], ['Butter', 0.4, 'kg'], ['Almonds', 0.2, 'kg'], ['Sugar', 0.15, 'kg']]],
+      [['Flour', 0.6, 'kg'], ['Butter', 0.4, 'kg'], ['Almonds', 0.2, 'kg'], ['Sugar', 0.15, 'kg']], [], []],
+    ['Latte', 'Coffee & café', 1, 4.00, 300, 5, 'Double shot espresso, steamed milk.',
+      [['Espresso beans', 0.018, 'kg'], ['Milk', 0.2, 'L']], [],
+      [['Small', 0.8, 3.50], ['Regular', 1, 4.00], ['Large', 1.3, 4.75]]],
   ]
-  for (const [name, category, servings, price, units, prep, notes, lines] of recipes) {
+  const rid = {}
+  for (const [name, category, servings, price, units, prep, notes, lines, components, sizes] of recipes) {
     await d.execute(
       'INSERT INTO recipes (name, category, servings, menu_price, units_sold, prep_minutes, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [name, category, servings, price, units, prep, notes]
     )
     const [row] = await d.select('SELECT last_insert_rowid() AS id')
+    rid[name] = row.id
     for (const [ing, qty, unit] of lines) {
-      await d.execute(
-        'INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit) VALUES (?, ?, ?, ?)',
-        [row.id, id[ing], qty, unit]
-      )
+      await d.execute('INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit) VALUES (?, ?, ?, ?)', [row.id, id[ing], qty, unit])
+    }
+    for (const [child, used] of components) {
+      await d.execute('INSERT INTO recipe_components (parent_recipe_id, child_recipe_id, servings_used) VALUES (?, ?, ?)', [row.id, rid[child], used])
+    }
+    for (const [label, mult, sprice] of sizes) {
+      await d.execute('INSERT INTO recipe_sizes (recipe_id, label, portion_mult, menu_price) VALUES (?, ?, ?, ?)', [row.id, label, mult, sprice])
     }
   }
   return { ingredients: ingredients.length, recipes: recipes.length }

@@ -105,6 +105,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRecipesStore } from '../stores/recipes'
+import { currency } from '../currency'
 
 const store = useRecipesStore()
 const recipeId = ref(null)
@@ -160,7 +161,7 @@ function fmtQty(n) {
 async function copyList() {
   const header = `${recipe.value.name} — ${fmtQty(targetServings.value)} servings (${fmtQty(multiplier.value)}× batch)`
   const body = lines.value.map((l) => `${l.ingredient_name}: ${fmtQty(l.quantity * multiplier.value)} ${l.unit}`)
-  const text = header + '\n' + body.join('\n') + `\nBatch cost: $${scaledCost.value.toFixed(2)}`
+  const text = header + '\n' + body.join('\n') + `\nBatch cost: ${currency.value}${scaledCost.value.toFixed(2)}`
   try {
     await navigator.clipboard.writeText(text)
     alert('Shopping list copied to clipboard!')

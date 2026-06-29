@@ -74,6 +74,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRecipesStore } from '../stores/recipes'
+import { currency } from '../currency'
 
 const store = useRecipesStore()
 const plan = reactive({})           // recipeId -> servings to make
@@ -123,7 +124,7 @@ function fmt(n) {
 
 async function copyList() {
   const lines = shopping.value.map((it) => `${it.name}: ${fmt(it.qty)} ${it.unit}`)
-  const text = 'Prep shopping list:\n' + lines.join('\n') + `\nTotal cost: $${totalCost.value.toFixed(2)}`
+  const text = 'Prep shopping list:\n' + lines.join('\n') + `\nTotal cost: ${currency.value}${totalCost.value.toFixed(2)}`
   try {
     await navigator.clipboard.writeText(text)
     alert('Shopping list copied to clipboard!')
