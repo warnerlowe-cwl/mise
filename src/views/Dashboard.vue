@@ -15,6 +15,13 @@
         Cost your recipes, price your menu, track stock and suppliers, and catch cost creep before it
         eats your margin. Want to see it all in action first?
       </p>
+      <div class="welcome-region">
+        <span class="welcome-region-label">Where are you?</span>
+        <select v-model="welcomeRegion" class="form-input" style="width:auto" @change="setRegion(welcomeRegion)">
+          <option v-for="r in REGIONS" :key="r.code" :value="r.code">{{ r.label }}</option>
+        </select>
+        <span class="welcome-region-hint">sets the suppliers Mise suggests</span>
+      </div>
       <div class="welcome-actions">
         <button class="btn btn-primary" :disabled="seeding" @click="loadSample">
           {{ seeding ? 'Loading…' : '✨ Load a sample kitchen' }}
@@ -178,6 +185,7 @@ import { useIngredientsStore } from '../stores/ingredients'
 import { useRecipesStore } from '../stores/recipes'
 import { useWasteStore } from '../stores/waste'
 import { seedSampleData } from '../db/database'
+import { REGIONS, getRegion, setRegion } from '../data/suppliers'
 
 const ingredientsStore = useIngredientsStore()
 const recipesStore = useRecipesStore()
@@ -185,6 +193,7 @@ const wasteStore = useWasteStore()
 
 const seeding = ref(false)
 const seedErr = ref('')
+const welcomeRegion = ref(getRegion())
 
 // Brand-new install: nothing entered yet → show the welcome hero.
 const isEmpty = computed(() =>
@@ -283,6 +292,9 @@ function costPerServing(r) {
 .welcome-emoji { font-size: 40px; }
 .welcome-title { font-size: 24px; margin: 8px 0 10px; }
 .welcome-text { color: var(--text-dim); font-size: 14.5px; line-height: 1.6; margin: 0 auto 22px; }
+.welcome-region { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; font-size: 13px; }
+.welcome-region-label { color: var(--text); font-weight: 600; }
+.welcome-region-hint { color: var(--text-muted); }
 .welcome-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .welcome-err { color: var(--red); font-size: 13px; margin-top: 12px; }
 
