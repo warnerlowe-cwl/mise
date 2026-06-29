@@ -15,6 +15,38 @@
       </p>
     </div>
 
+    <!-- Free vs Premium -->
+    <div class="compare-box">
+      <div class="compare-col">
+        <div class="compare-tier">Free</div>
+        <div class="compare-tier-sub">The core app, on one computer — yours forever</div>
+        <ul class="compare-list">
+          <li>Ingredients &amp; recipes</li>
+          <li>Menu pricing</li>
+          <li>Inventory &amp; par levels</li>
+          <li>Suppliers &amp; order sheets</li>
+          <li>Allergen tags</li>
+          <li>Waste tracking &amp; reports</li>
+          <li>Backup &amp; restore</li>
+        </ul>
+      </div>
+      <div class="compare-col compare-col-premium">
+        <div class="compare-tier">Premium <span style="color:var(--accent)">★</span></div>
+        <div class="compare-tier-sub">Everything in Free, plus the pro tools</div>
+        <ul class="compare-list compare-list-premium">
+          <li>Menu Engineering (Stars / Dogs)</li>
+          <li>Plate Cost (food + labor)</li>
+          <li>Sizes — S/M/L &amp; scoop pricing</li>
+          <li>Sub-recipes (buttercream, syrups, doughs)</li>
+          <li>Compare Prices across suppliers</li>
+          <li>Price Trends</li>
+          <li>Batch Calculator &amp; Prep Planner</li>
+          <li>Spec Sheets &amp; Menu Card (printables)</li>
+          <li>CSV export</li>
+        </ul>
+      </div>
+    </div>
+
     <!-- Plan cards -->
     <div class="plans-grid">
 
@@ -385,4 +417,25 @@ async function checkLicense() {
 
 .check-ok { background: rgba(16,185,129,0.1); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
 .check-err { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+
+.compare-box {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  max-width: 720px; margin: 0 auto 28px;
+}
+.compare-col {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 20px;
+}
+.compare-col-premium { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.04); }
+.compare-tier { font-size: 16px; font-weight: 800; }
+.compare-tier-sub { font-size: 12px; color: var(--text-muted); margin: 2px 0 12px; }
+.compare-list { list-style: none; padding: 0; margin: 0; }
+.compare-list li {
+  font-size: 13px; color: var(--text-dim); padding: 5px 0 5px 22px; position: relative;
+}
+.compare-list li::before {
+  content: '✓'; position: absolute; left: 0; color: var(--green); font-weight: 700;
+}
+.compare-list-premium li::before { color: var(--accent); }
+@media (max-width: 600px) { .compare-box { grid-template-columns: 1fr; } }
 </style>
