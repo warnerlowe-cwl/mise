@@ -37,7 +37,12 @@
         </thead>
         <tbody>
           <tr v-for="item in filtered" :key="item.id">
-            <td style="color: var(--text); font-weight: 500">{{ item.name }}</td>
+            <td style="color: var(--text); font-weight: 500">
+              {{ item.name }}
+              <span v-if="store.usage[item.id]" style="display:block; color:var(--text-muted); font-size:11px; font-weight:400">
+                Used in {{ store.usage[item.id] }} recipe{{ store.usage[item.id] === 1 ? '' : 's' }}
+              </span>
+            </td>
             <td><span class="badge badge-amber">{{ item.unit }}</span></td>
             <td style="color: var(--green); font-weight: 600">{{ cur }}{{ Number(item.cost_per_unit).toFixed(2) }}</td>
             <td>{{ item.supplier || '—' }}</td>
@@ -368,7 +373,7 @@ const isValid = computed(() =>
   form.value.name.trim() && form.value.unit && form.value.cost_per_unit !== ''
 )
 
-onMounted(() => store.fetchAll())
+onMounted(async () => { await store.fetchAll(); await store.loadUsage() })
 
 function openAdd() {
   editingId.value = null

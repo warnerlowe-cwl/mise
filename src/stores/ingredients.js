@@ -6,6 +6,7 @@ export const useIngredientsStore = defineStore('ingredients', {
     ingredients: [],
     priceHistory: {},   // ingredient_id -> [{ cost_per_unit, recorded_at }, ...] oldest→newest
     quotes: {},         // ingredient_id -> [{ id, supplier, price, updated_at }, ...]
+    usage: {},          // ingredient_id -> number of recipes that use it
     loading: false,
     error: null,
   }),
@@ -36,6 +37,17 @@ export const useIngredientsStore = defineStore('ingredients', {
       const map = {}
       for (const r of rows) (map[r.ingredient_id] ||= []).push(r)
       this.priceHistory = map
+    },
+
+    // How many recipes use each ingredient (for impact-when-price-changes).
+    async loadUsage() {
+      const db = await getDb()
+      const rows = await db.select(
+        'SELECT ingredient_id, COUNT(DISTINCT recipe_id) AS n FROM recipe_ingredients GROUP BY ingredient_id'
+      )
+      const map = {}
+      for (const r of rows) map[r.ingredient_id] = r.n
+      this.usage = map
     },
 
     // Supplier price comparison: load all quotes, grouped by ingredient (cheapest first).
