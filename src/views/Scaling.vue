@@ -120,7 +120,7 @@ onMounted(() => store.fetchAll())
 // When a new recipe is picked, load its lines and reset the scale to 1× (its own yield).
 watch(recipeId, async (id) => {
   if (id == null) { lines.value = []; return }
-  lines.value = await store.getIngredients(id)
+  lines.value = await store.getExpandedIngredients(id)
   multiplier.value = 1
   targetServings.value = Number(recipe.value?.servings) || 1
 })

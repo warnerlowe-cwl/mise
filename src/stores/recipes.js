@@ -63,6 +63,36 @@ export const useRecipesStore = defineStore('recipes', {
       }
     },
 
+    // Fully expand a recipe to raw ingredient lines, recursively exploding sub-recipes
+    // (scaled by servings used ÷ child servings) and aggregating by ingredient + unit.
+    // Cycle-guarded. Used by Scaling, Prep Planner and Spec Sheets so their costs +
+    // shopping lists include components. Requires this.recipes to be loaded (for servings).
+    async getExpandedIngredients(recipeId) {
+      const expand = async (rid, mult, stack) => {
+        if (stack.has(rid)) return []
+        stack.add(rid)
+        const direct = await this.getIngredients(rid)
+        const out = direct.map((l) => ({ ...l, quantity: Number(l.quantity) * mult }))
+        const comps = await this.getComponents(rid)
+        for (const c of comps) {
+          const child = this.recipes.find((r) => r.id === c.child_recipe_id)
+          const childServings = Number(child?.servings) || 1
+          const childMult = mult * ((Number(c.servings_used) || 0) / childServings)
+          if (childMult > 0) out.push(...await expand(c.child_recipe_id, childMult, stack))
+        }
+        stack.delete(rid)
+        return out
+      }
+      const flat = await expand(recipeId, 1, new Set())
+      const agg = {}
+      for (const l of flat) {
+        const key = l.ingredient_id + '|' + (l.unit || '')
+        if (!agg[key]) agg[key] = { ...l, quantity: 0 }
+        agg[key].quantity += Number(l.quantity) || 0
+      }
+      return Object.values(agg)
+    },
+
     // Sub-recipe components of a recipe (with child name + servings for display).
     async getComponents(recipeId) {
       const db = await getDb()

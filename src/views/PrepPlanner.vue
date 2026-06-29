@@ -84,7 +84,7 @@ const recipes = computed(() => store.recipes)
 onMounted(async () => {
   await store.fetchAll()
   const map = {}
-  for (const r of store.recipes) map[r.id] = await store.getIngredients(r.id)
+  for (const r of store.recipes) map[r.id] = await store.getExpandedIngredients(r.id)
   recipeLines.value = map
 })
 

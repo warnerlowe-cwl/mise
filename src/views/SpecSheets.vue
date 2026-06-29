@@ -88,7 +88,7 @@ const today = new Date().toLocaleDateString()
 onMounted(() => store.fetchAll())
 
 watch(recipeId, async (id) => {
-  lines.value = id == null ? [] : await store.getIngredients(id)
+  lines.value = id == null ? [] : await store.getExpandedIngredients(id)
 })
 
 const ALLERGEN_ORDER = [
