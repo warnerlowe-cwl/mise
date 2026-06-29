@@ -28,17 +28,17 @@
         <tbody>
           <tr v-for="r in rows" :key="r.id">
             <td style="font-weight:600">{{ r.name }}</td>
-            <td style="color:var(--text-dim)">${{ r.foodPerServing.toFixed(2) }}</td>
+            <td style="color:var(--text-dim)">{{ cur }}{{ r.foodPerServing.toFixed(2) }}</td>
             <td>
               <input :value="r.prep ?? ''" @change="setPrep(r, $event.target.value)"
                 type="number" min="0" step="any" class="form-input" placeholder="0" style="width:80px" />
             </td>
-            <td style="color:var(--text-dim)">${{ r.laborPerServing.toFixed(2) }}</td>
-            <td style="font-weight:600">${{ r.plateCost.toFixed(2) }}</td>
+            <td style="color:var(--text-dim)">{{ cur }}{{ r.laborPerServing.toFixed(2) }}</td>
+            <td style="font-weight:600">{{ cur }}{{ r.plateCost.toFixed(2) }}</td>
             <td>{{ r.price ? '$' + r.price.toFixed(2) : '—' }}</td>
             <td>
               <span v-if="r.price" :style="{ color: r.trueMargin >= 0 ? '#6ee7b7' : '#fca5a5', fontWeight:600 }">
-                ${{ r.trueMargin.toFixed(2) }}
+                {{ cur }}{{ r.trueMargin.toFixed(2) }}
                 <span style="color:var(--text-dim); font-weight:400">({{ r.truePct.toFixed(0) }}%)</span>
               </span>
               <span v-else style="color:var(--text-dim); font-size:12px">set a price</span>

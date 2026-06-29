@@ -12,11 +12,11 @@
     <div class="waste-stats">
       <div class="stat-card waste-stat">
         <div class="stat-label">This Week</div>
-        <div class="stat-value stat-value-sm stat-value-red">${{ wasteStore.weeklyWasteCost.toFixed(2) }}</div>
+        <div class="stat-value stat-value-sm stat-value-red">{{ cur }}{{ wasteStore.weeklyWasteCost.toFixed(2) }}</div>
       </div>
       <div class="stat-card waste-stat">
         <div class="stat-label">All Time</div>
-        <div class="stat-value stat-value-sm stat-value-red">${{ wasteStore.totalWasteCost.toFixed(2) }}</div>
+        <div class="stat-value stat-value-sm stat-value-red">{{ cur }}{{ wasteStore.totalWasteCost.toFixed(2) }}</div>
       </div>
       <div class="stat-card waste-stat">
         <div class="stat-label">Total Entries</div>
@@ -42,7 +42,7 @@
             <td style="color: var(--text-muted); font-size: 12px">{{ formatDate(e.logged_at) }}</td>
             <td style="color: var(--text); font-weight: 500">{{ e.ingredient_name }}</td>
             <td>{{ e.quantity }} {{ e.unit }}</td>
-            <td style="color: var(--red); font-weight: 600">${{ Number(e.waste_cost).toFixed(2) }}</td>
+            <td style="color: var(--red); font-weight: 600">{{ cur }}{{ Number(e.waste_cost).toFixed(2) }}</td>
             <td style="color: var(--text-muted)">{{ e.reason || '—' }}</td>
             <td>
               <button class="btn btn-danger" style="padding: 4px 10px; font-size: 12px" @click="confirmDelete(e)">Remove</button>
@@ -69,7 +69,7 @@
           <select v-model="form.ingredient_id" class="form-select" @change="syncUnit">
             <option value="">Select ingredient</option>
             <option v-for="ing in ingredientsStore.ingredients" :key="ing.id" :value="ing.id">
-              {{ ing.name }} — ${{ Number(ing.cost_per_unit).toFixed(2) }}/{{ ing.unit }}
+              {{ ing.name }} — {{ cur }}{{ Number(ing.cost_per_unit).toFixed(2) }}/{{ ing.unit }}
             </option>
           </select>
         </div>
@@ -105,7 +105,7 @@
         <!-- Cost preview -->
         <div v-if="estimatedCost !== null" style="padding: 12px; background: var(--surface-2); border-radius: 6px; display: flex; justify-content: space-between; margin-bottom: 4px">
           <span style="color: var(--text-dim); font-size: 13px">Estimated Waste Cost</span>
-          <span style="color: var(--red); font-weight: 700">${{ estimatedCost }}</span>
+          <span style="color: var(--red); font-weight: 700">{{ cur }}{{ estimatedCost }}</span>
         </div>
 
         <div class="modal-actions">

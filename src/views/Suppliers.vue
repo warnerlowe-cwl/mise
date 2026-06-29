@@ -46,7 +46,7 @@
           <tbody>
             <tr v-for="it in s.items" :key="it.id">
               <td style="font-weight:600">{{ it.name }}</td>
-              <td>${{ Number(it.cost_per_unit).toFixed(2) }}/{{ it.unit }}</td>
+              <td>{{ cur }}{{ Number(it.cost_per_unit).toFixed(2) }}/{{ it.unit }}</td>
               <td :style="it.low ? 'color:#fbbf24;font-weight:600' : 'color:var(--text-dim)'">
                 {{ it.on_hand ?? '—' }}{{ it.on_hand != null ? ' ' + it.unit : '' }}
               </td>
@@ -73,7 +73,7 @@
         <input v-model.number="adjustPct" type="number" step="any" class="form-input" placeholder="e.g. 5 or -3"
           style="max-width:160px" @keydown.enter="applyAdjust" />
         <p v-if="isFinitePct" style="font-size:13px; color:var(--text-dim); margin-top:10px">
-          Example: ${{ sampleOld.toFixed(2) }} → <strong :style="{ color: adjustPct >= 0 ? '#fca5a5' : '#6ee7b7' }">${{ sampleNew.toFixed(2) }}</strong>
+          Example: {{ cur }}{{ sampleOld.toFixed(2) }} → <strong :style="{ color: adjustPct >= 0 ? '#fca5a5' : '#6ee7b7' }">{{ cur }}{{ sampleNew.toFixed(2) }}</strong>
         </p>
         <div class="modal-actions">
           <button class="btn btn-ghost" @click="adjust = null" :disabled="applying">Cancel</button>

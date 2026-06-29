@@ -70,12 +70,14 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { exportAll, importAll, getDb, seedSampleData } from '../db/database'
 import { REGIONS, getRegion, setRegion } from '../data/suppliers'
+import { applyRegionCurrency } from '../currency'
 
 const authStore = useAuthStore()
 const businessName = ref('')
 const region = ref(getRegion())
 function saveRegion() {
   setRegion(region.value)
+  applyRegionCurrency()
 }
 const saving = ref(false)
 const saved = ref(false)

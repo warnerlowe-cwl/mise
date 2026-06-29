@@ -39,8 +39,8 @@
               <span v-else style="color: var(--text-muted)">—</span>
             </td>
             <td>{{ r.servings }}</td>
-            <td style="color: var(--green); font-weight: 600">${{ Number(r.total_cost).toFixed(2) }}</td>
-            <td style="color: var(--text-dim)">${{ costPerServing(r) }}</td>
+            <td style="color: var(--green); font-weight: 600">{{ cur }}{{ Number(r.total_cost).toFixed(2) }}</td>
+            <td style="color: var(--text-dim)">{{ cur }}{{ costPerServing(r) }}</td>
             <td>
               <div style="display: flex; gap: 6px; justify-content: flex-end">
                 <button class="btn btn-ghost" style="padding: 5px 10px" @click="openEdit(r)">Edit</button>
@@ -147,7 +147,7 @@
           <!-- Live cost preview -->
           <div v-if="lines.length" style="margin-top: 12px; padding: 12px; background: var(--surface-2); border-radius: 6px; display: flex; justify-content: space-between">
             <span style="color: var(--text-dim); font-size: 13px">Estimated Total Cost</span>
-            <span style="color: var(--green); font-weight: 700">${{ estimatedCost }}</span>
+            <span style="color: var(--green); font-weight: 700">{{ cur }}{{ estimatedCost }}</span>
           </div>
         </div>
 

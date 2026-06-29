@@ -29,7 +29,7 @@
             <div v-for="r in g.items" :key="r.id" class="menu-row">
               <span class="menu-name">{{ r.name }}</span>
               <span class="menu-dots"></span>
-              <span class="menu-price">${{ r.price.toFixed(2) }}</span>
+              <span class="menu-price">{{ cur }}{{ r.price.toFixed(2) }}</span>
             </div>
           </div>
         </template>
@@ -37,7 +37,7 @@
           <div v-for="r in sortedAll" :key="r.id" class="menu-row">
             <span class="menu-name">{{ r.name }}</span>
             <span class="menu-dots"></span>
-            <span class="menu-price">${{ r.price.toFixed(2) }}</span>
+            <span class="menu-price">{{ cur }}{{ r.price.toFixed(2) }}</span>
           </div>
         </template>
       </div>

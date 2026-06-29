@@ -44,14 +44,14 @@
             <tr v-for="it in shopping" :key="it.key">
               <td style="font-weight:600">{{ it.name }}</td>
               <td>{{ fmt(it.qty) }} {{ it.unit }}</td>
-              <td>${{ it.cost.toFixed(2) }}</td>
+              <td>{{ cur }}{{ it.cost.toFixed(2) }}</td>
             </tr>
           </tbody>
           <tfoot>
             <tr style="border-top:1px solid var(--border)">
               <td style="font-weight:600">{{ activeCount }} recipe{{ activeCount !== 1 ? 's' : '' }}</td>
               <td style="text-align:right; font-weight:600">Total</td>
-              <td style="font-weight:700">${{ totalCost.toFixed(2) }}</td>
+              <td style="font-weight:700">{{ cur }}{{ totalCost.toFixed(2) }}</td>
             </tr>
           </tfoot>
         </table>

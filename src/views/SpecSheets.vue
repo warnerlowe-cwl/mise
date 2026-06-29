@@ -27,16 +27,16 @@
             <div class="spec-sub">{{ recipe.category || 'Recipe' }} · Yields {{ recipe.servings }} serving{{ recipe.servings !== 1 ? 's' : '' }}</div>
           </div>
           <div class="spec-cost-box">
-            <div class="spec-cost-val">${{ costPerServing.toFixed(2) }}</div>
+            <div class="spec-cost-val">{{ cur }}{{ costPerServing.toFixed(2) }}</div>
             <div class="spec-cost-label">cost / serving</div>
           </div>
         </div>
 
         <div class="spec-meta">
-          <div><span class="spec-meta-k">Batch cost</span> ${{ totalCost.toFixed(2) }}</div>
-          <div v-if="recipe.menu_price"><span class="spec-meta-k">Menu price</span> ${{ Number(recipe.menu_price).toFixed(2) }}</div>
+          <div><span class="spec-meta-k">Batch cost</span> {{ cur }}{{ totalCost.toFixed(2) }}</div>
+          <div v-if="recipe.menu_price"><span class="spec-meta-k">Menu price</span> {{ cur }}{{ Number(recipe.menu_price).toFixed(2) }}</div>
           <div v-if="recipe.menu_price"><span class="spec-meta-k">Food cost</span> {{ foodCostPct.toFixed(1) }}%</div>
-          <div v-if="recipe.menu_price"><span class="spec-meta-k">Margin</span> ${{ margin.toFixed(2) }}</div>
+          <div v-if="recipe.menu_price"><span class="spec-meta-k">Margin</span> {{ cur }}{{ margin.toFixed(2) }}</div>
         </div>
 
         <div v-if="allergens.length" class="spec-allergens">
@@ -50,11 +50,11 @@
             <tr v-for="l in lines" :key="l.id">
               <td>{{ l.ingredient_name }}</td>
               <td>{{ fmt(l.quantity) }} {{ l.unit }}</td>
-              <td class="spec-r">${{ (l.quantity * (Number(l.effective_cost ?? l.cost_per_unit) || 0)).toFixed(2) }}</td>
+              <td class="spec-r">{{ cur }}{{ (l.quantity * (Number(l.effective_cost ?? l.cost_per_unit) || 0)).toFixed(2) }}</td>
             </tr>
           </tbody>
           <tfoot>
-            <tr><td colspan="2" class="spec-r">Total</td><td class="spec-r">${{ totalCost.toFixed(2) }}</td></tr>
+            <tr><td colspan="2" class="spec-r">Total</td><td class="spec-r">{{ cur }}{{ totalCost.toFixed(2) }}</td></tr>
           </tfoot>
         </table>
 

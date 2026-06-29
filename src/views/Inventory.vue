@@ -13,7 +13,7 @@
 
     <div class="inv-summary">
       <div class="card inv-stat">
-        <div class="inv-stat-val">${{ totalValue.toFixed(2) }}</div>
+        <div class="inv-stat-val">{{ cur }}{{ totalValue.toFixed(2) }}</div>
         <div class="inv-stat-label">Total stock value</div>
       </div>
       <div class="card inv-stat">
@@ -43,7 +43,7 @@
             <td>
               <div style="font-weight:600">{{ r.name }}</div>
               <div style="color:var(--text-dim); font-size:12px">
-                {{ r.supplier || 'No supplier' }} · ${{ Number(r.cost_per_unit).toFixed(2) }}/{{ r.unit }}
+                {{ r.supplier || 'No supplier' }} · {{ cur }}{{ Number(r.cost_per_unit).toFixed(2) }}/{{ r.unit }}
               </div>
             </td>
             <td>
@@ -61,7 +61,7 @@
                 order {{ r.reorderQty }} {{ r.unit }}
               </span>
             </td>
-            <td>${{ r.stockValue.toFixed(2) }}</td>
+            <td>{{ cur }}{{ r.stockValue.toFixed(2) }}</td>
           </tr>
         </tbody>
       </table>

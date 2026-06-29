@@ -27,7 +27,7 @@
             <span class="cmp-unit">per {{ r.unit }}</span>
           </div>
           <span v-if="r.savings > 0" class="cmp-save">
-            Save ${{ r.savings.toFixed(2) }}/{{ r.unit }} ({{ r.savingsPct.toFixed(0) }}%) with {{ r.cheapest.supplier }}
+            Save {{ cur }}{{ r.savings.toFixed(2) }}/{{ r.unit }} ({{ r.savingsPct.toFixed(0) }}%) with {{ r.cheapest.supplier }}
           </span>
           <span v-else class="cmp-best">✓ on the best price</span>
         </div>
@@ -41,7 +41,7 @@
               <span v-if="o.isCheapest" class="cmp-tag cmp-tag-best">cheapest</span>
             </div>
             <div class="cmp-q-right">
-              <span class="cmp-q-price">${{ o.price.toFixed(2) }}</span>
+              <span class="cmp-q-price">{{ cur }}{{ o.price.toFixed(2) }}</span>
               <button v-if="!o.active" class="btn btn-ghost cmp-btn" @click="makeActive(r, o)">Use this</button>
               <button v-if="o.isQuote" class="btn btn-ghost cmp-btn" title="Remove quote" @click="store.removeQuote(o.id)">✕</button>
             </div>

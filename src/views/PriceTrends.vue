@@ -47,8 +47,8 @@
                 {{ r.supplier || 'No supplier' }} · per {{ r.unit }}
               </div>
             </td>
-            <td>${{ r.first.toFixed(2) }}</td>
-            <td style="font-weight:600">${{ r.current.toFixed(2) }}</td>
+            <td>{{ cur }}{{ r.first.toFixed(2) }}</td>
+            <td style="font-weight:600">{{ cur }}{{ r.current.toFixed(2) }}</td>
             <td>
               <span v-if="r.points > 1" :style="changeStyle(r.pct)">
                 {{ r.pct > 0 ? '▲' : r.pct < 0 ? '▼' : '' }}
@@ -94,10 +94,10 @@
         </div>
 
         <div style="margin:14px 0; display:flex; align-items:baseline; gap:10px">
-          <div style="font-size:28px; font-weight:800">${{ detail.current.toFixed(2) }}</div>
+          <div style="font-size:28px; font-weight:800">{{ cur }}{{ detail.current.toFixed(2) }}</div>
           <span :style="changeStyle(detail.pct)">
             {{ detail.pct > 0 ? '▲ +' : detail.pct < 0 ? '▼ ' : '' }}{{ detail.pct.toFixed(1) }}%
-            <span style="color:var(--text-dim); font-weight:400">since ${{ detail.first.toFixed(2) }}</span>
+            <span style="color:var(--text-dim); font-weight:400">since {{ cur }}{{ detail.first.toFixed(2) }}</span>
           </span>
         </div>
 
@@ -106,7 +106,7 @@
           <tbody>
             <tr v-for="(h, i) in detail.history" :key="i">
               <td style="color:var(--text-dim)">{{ fmtDate(h.recorded_at) }}</td>
-              <td style="font-weight:600">${{ Number(h.cost_per_unit).toFixed(2) }}</td>
+              <td style="font-weight:600">{{ cur }}{{ Number(h.cost_per_unit).toFixed(2) }}</td>
               <td>
                 <span v-if="i > 0" :style="changeStyle(stepPct(detail.history, i))">
                   {{ stepPct(detail.history, i) > 0 ? '▲ +' : stepPct(detail.history, i) < 0 ? '▼ ' : '' }}{{ stepPct(detail.history, i).toFixed(1) }}%

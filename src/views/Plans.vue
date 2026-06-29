@@ -64,7 +64,7 @@
         <div class="plan-label">Seasonal</div>
         <div class="plan-price-custom">
           <span v-if="seasonalMonths > 0" class="plan-price-calc">
-            ${{ seasonalPrice }}<span class="plan-per"> one-time</span>
+            {{ cur }}{{ seasonalPrice }}<span class="plan-per"> one-time</span>
           </span>
           <span v-else class="plan-price-calc plan-price-muted">Pick dates</span>
         </div>
@@ -80,7 +80,7 @@
           </div>
         </div>
         <div v-if="seasonalMonths > 0" class="seasonal-calc">
-          {{ seasonalMonths.toFixed(1) }} months × $15 = <strong>${{ seasonalPrice }}</strong>
+          {{ seasonalMonths.toFixed(1) }} months × $15 = <strong>{{ cur }}{{ seasonalPrice }}</strong>
         </div>
         <button
           class="btn btn-ghost plan-btn"

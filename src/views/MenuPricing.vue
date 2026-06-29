@@ -30,10 +30,10 @@
             <td>
               <div style="font-weight:600">{{ r.name }}</div>
               <div style="color:var(--text-dim); font-size:12px">
-                {{ r.servings }} serving{{ r.servings === 1 ? '' : 's' }} · ${{ r.total_cost.toFixed(2) }} total
+                {{ r.servings }} serving{{ r.servings === 1 ? '' : 's' }} · {{ cur }}{{ r.total_cost.toFixed(2) }} total
               </div>
             </td>
-            <td>${{ r.costPerServing.toFixed(2) }}</td>
+            <td>{{ cur }}{{ r.costPerServing.toFixed(2) }}</td>
             <td>
               <input
                 :value="r.target"
@@ -43,7 +43,7 @@
             </td>
             <td>
               <button class="suggest-btn" @click="setPrice(r, r.suggested.toFixed(2))" title="Use this price">
-                ${{ r.suggested.toFixed(2) }}
+                {{ cur }}{{ r.suggested.toFixed(2) }}
               </button>
             </td>
             <td>
@@ -65,7 +65,7 @@
             </td>
             <td>
               <span v-if="r.menu_price" :style="{ color: r.margin >= 0 ? '#6ee7b7' : '#fca5a5', fontWeight:600 }">
-                ${{ r.margin.toFixed(2) }}
+                {{ cur }}{{ r.margin.toFixed(2) }}
               </span>
               <span v-else style="color:var(--text-dim)">—</span>
             </td>

@@ -26,10 +26,10 @@
         <tbody>
           <tr v-for="r in classified" :key="r.id">
             <td style="font-weight:600">{{ r.name }}</td>
-            <td>${{ r.price.toFixed(2) }}</td>
-            <td style="color:var(--text-dim)">${{ r.cost.toFixed(2) }}</td>
+            <td>{{ cur }}{{ r.price.toFixed(2) }}</td>
+            <td style="color:var(--text-dim)">{{ cur }}{{ r.cost.toFixed(2) }}</td>
             <td :style="{ color: r.margin >= avgMargin ? '#6ee7b7' : '#fca5a5', fontWeight:600 }">
-              ${{ r.margin.toFixed(2) }}
+              {{ cur }}{{ r.margin.toFixed(2) }}
             </td>
             <td>
               <input :value="r.units ?? ''" @change="setUnits(r, $event.target.value)"
@@ -61,7 +61,7 @@
         </div>
       </div>
       <p style="color:var(--text-dim); font-size:12.5px; margin:14px 0 0; line-height:1.6">
-        A dish is “high profit” if its margin beats the menu average (${{ avgMargin.toFixed(2) }}), and “popular”
+        A dish is “high profit” if its margin beats the menu average ({{ cur }}{{ avgMargin.toFixed(2) }}), and “popular”
         if it sells at least 70% of the average ({{ popThreshold.toFixed(0) }} units). Classic Kasavana–Smith method.
       </p>
     </div>

@@ -19,11 +19,11 @@
       </div>
       <div class="stat-card">
         <div class="stat-label">Avg Cost / Serving</div>
-        <div class="stat-value stat-value-green">${{ avgCostPerServing }}</div>
+        <div class="stat-value stat-value-green">{{ cur }}{{ avgCostPerServing }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Total Waste Cost</div>
-        <div class="stat-value stat-value-red">${{ wasteStore.totalWasteCost.toFixed(2) }}</div>
+        <div class="stat-value stat-value-red">{{ cur }}{{ wasteStore.totalWasteCost.toFixed(2) }}</div>
       </div>
     </div>
 
@@ -32,9 +32,9 @@
       <div class="section-header">Menu profit · based on units sold</div>
       <template v-if="hasSales">
         <div class="profit-row">
-          <div class="profit-stat"><div class="profit-val green">${{ revenue.toFixed(2) }}</div><div class="profit-label">Revenue</div></div>
-          <div class="profit-stat"><div class="profit-val red">${{ foodCost.toFixed(2) }}</div><div class="profit-label">Food cost</div></div>
-          <div class="profit-stat"><div class="profit-val">${{ grossProfit.toFixed(2) }}</div><div class="profit-label">Gross profit</div></div>
+          <div class="profit-stat"><div class="profit-val green">{{ cur }}{{ revenue.toFixed(2) }}</div><div class="profit-label">Revenue</div></div>
+          <div class="profit-stat"><div class="profit-val red">{{ cur }}{{ foodCost.toFixed(2) }}</div><div class="profit-label">Food cost</div></div>
+          <div class="profit-stat"><div class="profit-val">{{ cur }}{{ grossProfit.toFixed(2) }}</div><div class="profit-label">Gross profit</div></div>
           <div class="profit-stat"><div class="profit-val">{{ blendedPct.toFixed(1) }}%</div><div class="profit-label">Blended food cost</div></div>
         </div>
         <div style="margin-top:16px">
@@ -43,9 +43,9 @@
             <div class="rank-badge">{{ idx + 1 }}</div>
             <div class="rank-info">
               <div class="rank-name">{{ r.name }}</div>
-              <div class="rank-sub">{{ r.units }} sold · ${{ r.marginEach.toFixed(2) }}/each</div>
+              <div class="rank-sub">{{ r.units }} sold · {{ cur }}{{ r.marginEach.toFixed(2) }}/each</div>
             </div>
-            <div class="rank-end"><div class="amount-green">${{ r.profit.toFixed(2) }}</div></div>
+            <div class="rank-end"><div class="amount-green">{{ cur }}{{ r.profit.toFixed(2) }}</div></div>
           </div>
         </div>
       </template>
@@ -68,8 +68,8 @@
               <div class="rank-sub">{{ r.servings }} serving{{ r.servings !== 1 ? 's' : '' }}</div>
             </div>
             <div class="rank-end">
-              <div class="amount-green">${{ Number(r.total_cost).toFixed(2) }}</div>
-              <div class="rank-sub">${{ costPerServing(r) }}/srv</div>
+              <div class="amount-green">{{ cur }}{{ Number(r.total_cost).toFixed(2) }}</div>
+              <div class="rank-sub">{{ cur }}{{ costPerServing(r) }}/srv</div>
             </div>
           </div>
         </div>
@@ -89,7 +89,7 @@
               <div class="rank-sub">{{ ing.supplier || 'No supplier' }}</div>
             </div>
             <div class="rank-end">
-              <div class="amount-accent">${{ Number(ing.cost_per_unit).toFixed(2) }}</div>
+              <div class="amount-accent">{{ cur }}{{ Number(ing.cost_per_unit).toFixed(2) }}</div>
               <div class="rank-sub">per {{ ing.unit }}</div>
             </div>
           </div>
@@ -118,7 +118,7 @@
               <td style="color:var(--text);font-weight:500">{{ w.name }}</td>
               <td>{{ w.totalQty.toFixed(2) }} {{ w.unit }}</td>
               <td>{{ w.count }}</td>
-              <td style="color: var(--red); font-weight: 600">${{ w.totalCost.toFixed(2) }}</td>
+              <td style="color: var(--red); font-weight: 600">{{ cur }}{{ w.totalCost.toFixed(2) }}</td>
             </tr>
           </tbody>
         </table>

@@ -17,7 +17,7 @@
       </p>
       <div class="welcome-region">
         <span class="welcome-region-label">Where are you?</span>
-        <select v-model="welcomeRegion" class="form-input" style="width:auto" @change="setRegion(welcomeRegion)">
+        <select v-model="welcomeRegion" class="form-input" style="width:auto" @change="setRegion(welcomeRegion); applyRegionCurrency()">
           <option v-for="r in REGIONS" :key="r.code" :value="r.code">{{ r.label }}</option>
         </select>
         <span class="welcome-region-hint">sets the suppliers Mise suggests</span>
@@ -81,7 +81,7 @@
           </svg>
         </div>
         <div class="stat-label">Waste This Week</div>
-        <div class="stat-value stat-value-red">${{ wasteStore.weeklyWasteCost.toFixed(2) }}</div>
+        <div class="stat-value stat-value-red">{{ cur }}{{ wasteStore.weeklyWasteCost.toFixed(2) }}</div>
         <div class="stat-sub">in logged waste</div>
       </div>
 
@@ -93,7 +93,7 @@
           </svg>
         </div>
         <div class="stat-label">Avg Recipe Cost</div>
-        <div class="stat-value stat-value-green">${{ avgRecipeCost }}</div>
+        <div class="stat-value stat-value-green">{{ cur }}{{ avgRecipeCost }}</div>
         <div class="stat-sub">per recipe</div>
       </div>
     </div>
@@ -134,8 +134,8 @@
               <div class="list-row-secondary">{{ r.servings }} serving{{ r.servings !== 1 ? 's' : '' }}</div>
             </div>
             <div class="list-row-end">
-              <div class="amount-green">${{ Number(r.total_cost).toFixed(2) }}</div>
-              <div class="list-row-secondary">${{ costPerServing(r) }}/serving</div>
+              <div class="amount-green">{{ cur }}{{ Number(r.total_cost).toFixed(2) }}</div>
+              <div class="list-row-secondary">{{ cur }}{{ costPerServing(r) }}/serving</div>
             </div>
           </div>
         </div>
@@ -152,7 +152,7 @@
               <div class="list-row-primary">{{ w.ingredient_name }}</div>
               <div class="list-row-secondary">{{ w.quantity }} {{ w.unit }}{{ w.reason ? ' · ' + w.reason : '' }}</div>
             </div>
-            <div class="amount-red">${{ Number(w.waste_cost).toFixed(2) }}</div>
+            <div class="amount-red">{{ cur }}{{ Number(w.waste_cost).toFixed(2) }}</div>
           </div>
         </div>
         <div v-else class="empty-state" style="padding: 30px 0">
@@ -167,7 +167,7 @@
       <div v-if="topIngredients.length" class="ing-chips">
         <div v-for="ing in topIngredients" :key="ing.id" class="ing-chip">
           <div class="ing-chip-name">{{ ing.name }}</div>
-          <div class="ing-chip-cost">${{ Number(ing.cost_per_unit).toFixed(2) }}</div>
+          <div class="ing-chip-cost">{{ cur }}{{ Number(ing.cost_per_unit).toFixed(2) }}</div>
           <div class="ing-chip-unit">per {{ ing.unit }}</div>
         </div>
       </div>
@@ -186,6 +186,7 @@ import { useRecipesStore } from '../stores/recipes'
 import { useWasteStore } from '../stores/waste'
 import { seedSampleData } from '../db/database'
 import { REGIONS, getRegion, setRegion } from '../data/suppliers'
+import { applyRegionCurrency } from '../currency'
 
 const ingredientsStore = useIngredientsStore()
 const recipesStore = useRecipesStore()

@@ -39,7 +39,7 @@
           <tr v-for="item in filtered" :key="item.id">
             <td style="color: var(--text); font-weight: 500">{{ item.name }}</td>
             <td><span class="badge badge-amber">{{ item.unit }}</span></td>
-            <td style="color: var(--green); font-weight: 600">${{ Number(item.cost_per_unit).toFixed(2) }}</td>
+            <td style="color: var(--green); font-weight: 600">{{ cur }}{{ Number(item.cost_per_unit).toFixed(2) }}</td>
             <td>{{ item.supplier || '—' }}</td>
             <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ item.notes || '—' }}</td>
             <td>
@@ -134,14 +134,14 @@
             </div>
           </div>
           <div v-if="packDerivedCost != null" style="margin-top:10px; font-size:13px; color:var(--green)">
-            = <strong>${{ packDerivedCost.toFixed(4) }}</strong> per {{ form.unit || 'unit' }} — filled into Cost per Unit above
+            = <strong>{{ cur }}{{ packDerivedCost.toFixed(4) }}</strong> per {{ form.unit || 'unit' }} — filled into Cost per Unit above
           </div>
           <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap">
             <label class="form-label" style="margin:0">Usable yield %</label>
             <input v-model="form.yield_pct" class="form-input" type="number" min="1" max="100" step="1" placeholder="100" style="width:90px" />
             <span style="color:var(--text-dim); font-size:12px">
               trim/loss — e.g. 80% if you toss 20%.
-              <template v-if="effectiveCost != null">True cost <strong style="color:var(--text)">${{ effectiveCost.toFixed(2) }}</strong>/{{ form.unit || 'unit' }}</template>
+              <template v-if="effectiveCost != null">True cost <strong style="color:var(--text)">{{ cur }}{{ effectiveCost.toFixed(2) }}</strong>/{{ form.unit || 'unit' }}</template>
             </span>
           </div>
         </div>
@@ -255,7 +255,7 @@
               <tr v-for="(r, i) in parsed.valid.slice(0, 50)" :key="i">
                 <td>{{ r.name }}</td>
                 <td><span class="badge badge-amber">{{ r.unit }}</span></td>
-                <td>${{ Number(r.cost_per_unit).toFixed(2) }}</td>
+                <td>{{ cur }}{{ Number(r.cost_per_unit).toFixed(2) }}</td>
                 <td style="color: var(--text-dim)">{{ r.supplier || '—' }}</td>
               </tr>
             </tbody>

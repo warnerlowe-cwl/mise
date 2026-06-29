@@ -44,11 +44,11 @@
           <div class="sc-stat-label">Servings</div>
         </div>
         <div class="card sc-stat">
-          <div class="sc-stat-val">${{ scaledCost.toFixed(2) }}</div>
+          <div class="sc-stat-val">{{ cur }}{{ scaledCost.toFixed(2) }}</div>
           <div class="sc-stat-label">Batch cost</div>
         </div>
         <div class="card sc-stat">
-          <div class="sc-stat-val">${{ costPerServing.toFixed(2) }}</div>
+          <div class="sc-stat-val">{{ cur }}{{ costPerServing.toFixed(2) }}</div>
           <div class="sc-stat-label">Cost / serving</div>
         </div>
         <div class="card sc-stat">
@@ -71,13 +71,13 @@
               <td style="font-weight:600">{{ l.ingredient_name }}</td>
               <td style="color:var(--text-dim)">{{ fmtQty(l.quantity) }} {{ l.unit }}</td>
               <td style="font-weight:600">{{ fmtQty(l.quantity * multiplier) }} {{ l.unit }}</td>
-              <td>${{ (l.quantity * multiplier * (Number(l.effective_cost ?? l.cost_per_unit) || 0)).toFixed(2) }}</td>
+              <td>{{ cur }}{{ (l.quantity * multiplier * (Number(l.effective_cost ?? l.cost_per_unit) || 0)).toFixed(2) }}</td>
             </tr>
           </tbody>
           <tfoot>
             <tr style="border-top:1px solid var(--border)">
               <td colspan="3" style="text-align:right; font-weight:600">Total</td>
-              <td style="font-weight:700">${{ scaledCost.toFixed(2) }}</td>
+              <td style="font-weight:700">{{ cur }}{{ scaledCost.toFixed(2) }}</td>
             </tr>
           </tfoot>
         </table>
