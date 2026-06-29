@@ -161,6 +161,19 @@ async function initSchema() {
     )
   `)
 
+  // Sizes: sell one recipe at several sizes (Small/Large, 12oz/16oz, single/double scoop).
+  // Each size is a portion multiplier of the base recipe with its own menu price.
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS recipe_sizes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      recipe_id INTEGER NOT NULL,
+      label TEXT NOT NULL,
+      portion_mult REAL NOT NULL DEFAULT 1,
+      menu_price REAL,
+      FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+    )
+  `)
+
   await db.execute(`
     CREATE TABLE IF NOT EXISTS waste_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

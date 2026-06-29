@@ -93,6 +93,24 @@ export const useRecipesStore = defineStore('recipes', {
       return Object.values(agg)
     },
 
+    // Sell sizes for a recipe (Small/Large etc.).
+    async getSizes(recipeId) {
+      const db = await getDb()
+      return await db.select('SELECT * FROM recipe_sizes WHERE recipe_id=? ORDER BY portion_mult ASC, id ASC', [recipeId])
+    },
+
+    async _saveSizes(db, recipeId, sizes) {
+      await db.execute('DELETE FROM recipe_sizes WHERE recipe_id=?', [recipeId])
+      for (const s of sizes || []) {
+        const label = (s.label || '').trim()
+        if (!label || !(Number(s.portion_mult) > 0)) continue
+        await db.execute(
+          'INSERT INTO recipe_sizes (recipe_id, label, portion_mult, menu_price) VALUES (?, ?, ?, ?)',
+          [recipeId, label, Number(s.portion_mult), s.menu_price === '' || s.menu_price == null ? null : Number(s.menu_price)]
+        )
+      }
+    },
+
     // Sub-recipe components of a recipe (with child name + servings for display).
     async getComponents(recipeId) {
       const db = await getDb()
@@ -115,7 +133,7 @@ export const useRecipesStore = defineStore('recipes', {
       `, [recipeId])
     },
 
-    async add(recipe, lines, components = []) {
+    async add(recipe, lines, components = [], sizes = []) {
       const db = await getDb()
       await db.execute(
         'INSERT INTO recipes (name, category, servings, notes) VALUES (?, ?, ?, ?)',
@@ -130,10 +148,11 @@ export const useRecipesStore = defineStore('recipes', {
         )
       }
       await this._saveComponents(db, recipeId, components)
+      await this._saveSizes(db, recipeId, sizes)
       await this.fetchAll()
     },
 
-    async update(id, recipe, lines, components = []) {
+    async update(id, recipe, lines, components = [], sizes = []) {
       const db = await getDb()
       await db.execute(
         'UPDATE recipes SET name=?, category=?, servings=?, notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
@@ -147,6 +166,7 @@ export const useRecipesStore = defineStore('recipes', {
         )
       }
       await this._saveComponents(db, id, components)
+      await this._saveSizes(db, id, sizes)
       await this.fetchAll()
     },
 
@@ -196,6 +216,8 @@ export const useRecipesStore = defineStore('recipes', {
       }
       const comps = await this.getComponents(id)
       await this._saveComponents(db, row.id, comps)
+      const sizes = await this.getSizes(id)
+      await this._saveSizes(db, row.id, sizes)
       await this.fetchAll()
       return row.id
     },

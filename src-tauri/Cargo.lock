@@ -2446,7 +2446,7 @@ dependencies = [
 
 [[package]]
 name = "mise"
-version = "0.2.42"
+version = "0.2.43"
 dependencies = [
  "log",
  "serde",

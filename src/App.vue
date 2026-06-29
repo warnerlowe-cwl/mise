@@ -81,6 +81,13 @@
           </svg>
           Plate Cost
         </RouterLink>
+        <RouterLink to="/sizes" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 16V9M10 16V5M14 16v-4"/>
+            <path d="M3 16h14"/>
+          </svg>
+          Sizes
+        </RouterLink>
         <RouterLink to="/menu-card" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <rect x="4" y="2.5" width="12" height="15" rx="1.5"/>

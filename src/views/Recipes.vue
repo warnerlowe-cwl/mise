@@ -167,6 +167,28 @@
           </div>
         </div>
 
+        <!-- Sizes -->
+        <div style="margin-top: 8px; margin-bottom: 16px">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
+            <label class="form-label" style="margin: 0">Sizes <span style="color:var(--text-muted); font-weight:400">— sell at multiple sizes (S/L, 12/16oz, scoops)</span></label>
+            <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 12px" @click="addSize">+ Add</button>
+          </div>
+          <div v-if="sizes.length" style="display: grid; grid-template-columns: 1fr 110px 110px auto; gap: 8px; margin-bottom: 4px">
+            <span class="form-label" style="margin:0">Label</span>
+            <span class="form-label" style="margin:0">Portion ×</span>
+            <span class="form-label" style="margin:0">Price</span><span></span>
+          </div>
+          <div v-for="(s, idx) in sizes" :key="idx" style="display: grid; grid-template-columns: 1fr 110px 110px auto; gap: 8px; margin-bottom: 8px; align-items: center">
+            <input v-model="s.label" class="form-input" placeholder="e.g. Large" />
+            <input v-model="s.portion_mult" class="form-input" type="number" step="0.05" min="0" placeholder="1" />
+            <input v-model="s.menu_price" class="form-input" type="number" step="0.01" min="0" :placeholder="cur + '0.00'" />
+            <button class="btn btn-danger" style="padding: 5px 10px" @click="removeSize(idx)">✕</button>
+          </div>
+          <div v-if="sizes.length" style="color: var(--text-muted); font-size: 12px">
+            Portion × scales the base recipe cost — e.g. a Large at 1.3× costs 1.3× a regular serving.
+          </div>
+        </div>
+
         <div class="modal-actions">
           <button class="btn btn-ghost" @click="closeModal">Cancel</button>
           <button class="btn btn-primary" @click="save" :disabled="!isValid">
@@ -209,6 +231,14 @@ const deleteTarget = ref(null)
 const form = ref({ name: '', category: '', servings: 1, notes: '' })
 const lines = ref([])
 const components = ref([])
+const sizes = ref([])
+
+function addSize() {
+  sizes.value.push({ label: '', portion_mult: 1, menu_price: '' })
+}
+function removeSize(idx) {
+  sizes.value.splice(idx, 1)
+}
 
 // Other recipes that can be used as components (exclude the one being edited).
 const componentChoices = computed(() => store.recipes.filter((r) => r.id !== editingId.value))
@@ -291,6 +321,7 @@ function openAdd() {
   form.value = { name: '', category: '', servings: 1, notes: '' }
   lines.value = []
   components.value = []
+  sizes.value = []
   showModal.value = true
 }
 
@@ -301,6 +332,8 @@ async function openEdit(r) {
   lines.value = ings.map(i => ({ ingredient_id: i.ingredient_id, quantity: i.quantity, unit: i.unit }))
   const comps = await store.getComponents(r.id)
   components.value = comps.map(c => ({ child_recipe_id: c.child_recipe_id, servings_used: c.servings_used }))
+  const szs = await store.getSizes(r.id)
+  sizes.value = szs.map(s => ({ label: s.label, portion_mult: s.portion_mult, menu_price: s.menu_price ?? '' }))
   showModal.value = true
 }
 
@@ -309,16 +342,18 @@ function closeModal() {
   editingId.value = null
   lines.value = []
   components.value = []
+  sizes.value = []
 }
 
 async function save() {
   if (!isValid.value) return
   const validLines = lines.value.filter(l => l.ingredient_id && l.quantity)
   const validComponents = components.value.filter(c => c.child_recipe_id && Number(c.servings_used) > 0)
+  const validSizes = sizes.value.filter(s => (s.label || '').trim() && Number(s.portion_mult) > 0)
   if (editingId.value) {
-    await store.update(editingId.value, form.value, validLines, validComponents)
+    await store.update(editingId.value, form.value, validLines, validComponents, validSizes)
   } else {
-    await store.add(form.value, validLines, validComponents)
+    await store.add(form.value, validLines, validComponents, validSizes)
   }
   closeModal()
 }
