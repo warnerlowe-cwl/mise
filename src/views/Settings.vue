@@ -50,6 +50,7 @@
       <div class="settings-actions" style="flex-wrap: wrap; gap: 10px">
         <button class="btn btn-primary" :disabled="busy" @click="exportBackup">⬇ Export backup (.json)</button>
         <button class="btn btn-ghost" :disabled="busy" @click="exportCsv">Export ingredients (.csv)</button>
+        <button class="btn btn-ghost" :disabled="busy" @click="exportRecipesCsv">Export recipes (.csv)</button>
         <button class="btn btn-ghost" :disabled="busy" @click="$refs.restoreInput.click()">↺ Restore from backup…</button>
         <button class="btn btn-ghost" :disabled="busy" @click="loadSample">✨ Load sample data</button>
         <input ref="restoreInput" type="file" accept="application/json,.json" style="display:none" @change="restoreBackup" />
@@ -71,6 +72,9 @@ import { useAuthStore } from '../stores/auth'
 import { exportAll, importAll, getDb, seedSampleData } from '../db/database'
 import { REGIONS, getRegion, setRegion } from '../data/suppliers'
 import { applyRegionCurrency } from '../currency'
+import { useRecipesStore } from '../stores/recipes'
+
+const recipesStore = useRecipesStore()
 
 const authStore = useAuthStore()
 const businessName = ref('')
@@ -149,6 +153,37 @@ async function loadSample() {
     setTimeout(() => window.location.reload(), 800)
   } catch (e) {
     dataErr.value = e?.message || 'Could not load sample data'
+    busy.value = false
+  }
+}
+
+async function exportRecipesCsv() {
+  dataMsg.value = ''; dataErr.value = ''; busy.value = true
+  try {
+    await recipesStore.fetchAll()
+    const header = ['name', 'category', 'servings', 'total_cost', 'cost_per_serving', 'menu_price', 'margin_per_serving', 'food_cost_pct', 'units_sold']
+    const lines = [header.join(',')]
+    for (const r of recipesStore.recipes) {
+      const servings = Number(r.servings) || 1
+      const cost = Number(r.total_cost) || 0
+      const cps = cost / servings
+      const price = r.menu_price != null ? Number(r.menu_price) : ''
+      const margin = price !== '' ? (price - cps) : ''
+      const fcPct = price !== '' && price > 0 ? (cps / price) * 100 : ''
+      const row = [
+        r.name, r.category || '', servings, cost.toFixed(2), cps.toFixed(2),
+        price === '' ? '' : price.toFixed(2),
+        margin === '' ? '' : margin.toFixed(2),
+        fcPct === '' ? '' : fcPct.toFixed(1),
+        r.units_sold ?? '',
+      ]
+      lines.push(row.map(csvCell).join(','))
+    }
+    download(`mise-recipes-${today()}.csv`, lines.join('\n'), 'text/csv')
+    dataMsg.value = `✓ Exported ${recipesStore.recipes.length} recipes.`
+  } catch (e) {
+    dataErr.value = e?.message || 'Recipe export failed'
+  } finally {
     busy.value = false
   }
 }
