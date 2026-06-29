@@ -26,6 +26,20 @@
 
     <template v-else>
 
+    <!-- Getting started checklist -->
+    <div v-if="showChecklist" class="checklist">
+      <div class="cl-head">
+        <strong>Getting started</strong>
+        <span class="cl-progress">{{ doneCount }} / {{ steps.length }}</span>
+        <button class="cl-dismiss" @click="dismissChecklist">Dismiss</button>
+      </div>
+      <RouterLink v-for="s in steps" :key="s.label" :to="s.to" class="cl-step" :class="{ 'cl-step-done': s.done }">
+        <span class="cl-check" :class="{ 'cl-check-done': s.done }">{{ s.done ? '✓' : '' }}</span>
+        <span class="cl-label">{{ s.label }}</span>
+        <span v-if="!s.done" class="cl-go">→</span>
+      </RouterLink>
+    </div>
+
     <!-- Stat Cards -->
     <div class="stat-grid">
       <div class="stat-card">
@@ -196,7 +210,23 @@ onMounted(async () => {
     wasteStore.fetchAll(),
   ])
   await ingredientsStore.loadPriceHistory()
+  await ingredientsStore.loadQuotes()
 })
+
+// Getting-started checklist — guides the first key steps, hides once done or dismissed.
+const dismissed = ref(localStorage.getItem('mise_checklist_dismissed') === '1')
+const steps = computed(() => [
+  { label: 'Add your ingredients', done: ingredientsStore.ingredients.length > 0, to: '/ingredients' },
+  { label: 'Build a recipe', done: recipesStore.recipes.length > 0, to: '/recipes' },
+  { label: 'Set a menu price', done: recipesStore.recipes.some((r) => Number(r.menu_price) > 0), to: '/pricing' },
+  { label: 'Compare a supplier price', done: Object.keys(ingredientsStore.quotes).length > 0, to: '/compare' },
+])
+const doneCount = computed(() => steps.value.filter((s) => s.done).length)
+const showChecklist = computed(() => !isEmpty.value && doneCount.value < steps.value.length && !dismissed.value)
+function dismissChecklist() {
+  dismissed.value = true
+  localStorage.setItem('mise_checklist_dismissed', '1')
+}
 
 // Ingredients below their par level — these need reordering.
 const reorderItems = computed(() =>
@@ -255,6 +285,18 @@ function costPerServing(r) {
 .welcome-text { color: var(--text-dim); font-size: 14.5px; line-height: 1.6; margin: 0 auto 22px; }
 .welcome-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .welcome-err { color: var(--red); font-size: 13px; margin-top: 12px; }
+
+.checklist { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 20px; }
+.cl-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.cl-progress { color: var(--accent); font-weight: 700; font-size: 13px; }
+.cl-dismiss { margin-left: auto; background: none; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; }
+.cl-dismiss:hover { color: var(--text); }
+.cl-step { display: flex; align-items: center; gap: 10px; padding: 8px 0; text-decoration: none; color: var(--text); font-size: 13.5px; border-bottom: 1px solid var(--border); }
+.cl-step:last-child { border-bottom: none; }
+.cl-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+.cl-check-done { background: var(--green); border-color: var(--green); color: #07210f; font-weight: 800; }
+.cl-step-done .cl-label { color: var(--text-muted); text-decoration: line-through; }
+.cl-go { margin-left: auto; color: var(--accent); }
 
 .alert-panel { margin-bottom: 20px; }
 .alert-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
