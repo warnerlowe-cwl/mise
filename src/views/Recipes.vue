@@ -91,7 +91,29 @@
         <div style="margin-top: 8px; margin-bottom: 16px">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
             <label class="form-label" style="margin: 0">Ingredients</label>
-            <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 12px" @click="addLine">+ Add</button>
+            <div style="display: flex; gap: 8px">
+              <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 12px" @click="openQuickAdd">+ New ingredient</button>
+              <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 12px" @click="addLine">+ Add line</button>
+            </div>
+          </div>
+
+          <!-- Quick-add a brand-new ingredient without leaving the recipe -->
+          <div v-if="showQuickAdd" style="background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px">
+            <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px">New ingredient</div>
+            <div style="display: grid; grid-template-columns: 1fr 96px 96px; gap: 8px">
+              <input v-model="quickIng.name" class="form-input" placeholder="Name" @keydown.enter="saveQuickIngredient" />
+              <select v-model="quickIng.unit" class="form-select">
+                <option value="">Unit</option>
+                <optgroup label="Weight"><option>lb</option><option>oz</option><option>kg</option><option>g</option></optgroup>
+                <optgroup label="Volume"><option>L</option><option>ml</option><option>gal</option><option>qt</option><option>pt</option><option>cup</option><option>fl oz</option><option>tbsp</option><option>tsp</option></optgroup>
+                <optgroup label="Count"><option>each</option><option>dozen</option><option>case</option><option>bag</option><option>can</option><option>bottle</option></optgroup>
+              </select>
+              <input v-model="quickIng.cost_per_unit" class="form-input" type="number" step="0.01" min="0" placeholder="$/unit" />
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px">
+              <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 12px" @click="showQuickAdd = false">Cancel</button>
+              <button class="btn btn-primary" style="padding: 4px 10px; font-size: 12px" :disabled="!quickIng.name.trim() || !quickIng.unit" @click="saveQuickIngredient">Add &amp; use</button>
+            </div>
           </div>
 
           <div v-if="!lines.length" style="color: var(--text-muted); font-size: 13px; padding: 12px; background: var(--surface-2); border-radius: 6px; text-align: center">
@@ -200,6 +222,22 @@ function costPerServing(r) {
 
 function addLine() {
   lines.value.push({ ingredient_id: '', quantity: '', unit: 'each' })
+}
+
+// Quick-add a new ingredient inline, then drop it straight into a recipe line.
+const showQuickAdd = ref(false)
+const quickIng = ref({ name: '', unit: '', cost_per_unit: '' })
+function openQuickAdd() {
+  quickIng.value = { name: '', unit: '', cost_per_unit: '' }
+  showQuickAdd.value = true
+}
+async function saveQuickIngredient() {
+  const name = quickIng.value.name.trim()
+  if (!name || !quickIng.value.unit) return
+  await ingredientsStore.add({ name, unit: quickIng.value.unit, cost_per_unit: Number(quickIng.value.cost_per_unit) || 0 })
+  const created = [...ingredientsStore.ingredients].reverse().find((i) => i.name.trim().toLowerCase() === name.toLowerCase())
+  if (created) lines.value.push({ ingredient_id: created.id, quantity: '', unit: created.unit })
+  showQuickAdd.value = false
 }
 
 function removeLine(idx) {
