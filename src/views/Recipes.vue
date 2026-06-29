@@ -33,7 +33,12 @@
         </thead>
         <tbody>
           <tr v-for="r in filtered" :key="r.id">
-            <td style="color: var(--text); font-weight: 500">{{ r.name }}</td>
+            <td style="color: var(--text); font-weight: 500">
+              {{ r.name }}
+              <span v-if="r.used_in" style="display:block; color:var(--text-muted); font-size:11px; font-weight:400">
+                Used in {{ r.used_in }} recipe{{ r.used_in === 1 ? '' : 's' }}
+              </span>
+            </td>
             <td>
               <span v-if="r.category" class="badge badge-amber">{{ r.category }}</span>
               <span v-else style="color: var(--text-muted)">—</span>
@@ -205,6 +210,9 @@
         <p style="color: var(--text-dim); font-size: 14px">
           Are you sure you want to delete <strong style="color: var(--text)">{{ deleteTarget.name }}</strong>?
           This cannot be undone.
+        </p>
+        <p v-if="deleteTarget.used_in" style="color: #fbbf24; font-size: 13px; margin-top: 8px">
+          ⚠ This recipe is used as a sub-recipe in {{ deleteTarget.used_in }} other recipe{{ deleteTarget.used_in === 1 ? '' : 's' }} — deleting it will remove it from their costs.
         </p>
         <div class="modal-actions">
           <button class="btn btn-ghost" @click="deleteTarget = null">Cancel</button>

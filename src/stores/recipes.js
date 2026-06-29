@@ -55,6 +55,10 @@ export const useRecipesStore = defineStore('recipes', {
           return total
         }
         for (const r of rows) r.total_cost = fullCost(r.id)
+        // How many recipes use each recipe as a sub-recipe component.
+        const usedIn = {}
+        for (const c of components) usedIn[c.child_recipe_id] = (usedIn[c.child_recipe_id] || 0) + 1
+        for (const r of rows) r.used_in = usedIn[r.id] || 0
         this.recipes = rows
       } catch (e) {
         this.error = e.message
