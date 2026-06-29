@@ -6,6 +6,7 @@
         <p class="page-subtitle">Manage your ingredient list and unit costs</p>
       </div>
       <div style="display:flex; gap:8px">
+        <button class="btn btn-ghost" @click="openLibrary">📚 From library</button>
         <button class="btn btn-ghost" @click="openImport">⬆ Import CSV</button>
         <button class="btn btn-primary" @click="openAdd">+ Add Ingredient</button>
       </div>
@@ -83,6 +84,8 @@
                 <option>g</option>
               </optgroup>
               <optgroup label="Volume">
+                <option>L</option>
+                <option>ml</option>
                 <option>gal</option>
                 <option>qt</option>
                 <option>pt</option>
@@ -172,6 +175,40 @@
       </div>
     </div>
 
+    <!-- Starter library -->
+    <div class="modal-overlay" v-if="showLibrary" @click.self="showLibrary = false">
+      <div class="modal" style="width: 620px; max-height: 86vh; display:flex; flex-direction:column">
+        <h2 class="modal-title">Add from library</h2>
+        <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 12px">
+          Tap the items you stock — they're added with a sensible unit and a $0 cost you fill in later
+          (or use “How you buy it” to price them). Skips anything you already have.
+        </p>
+        <div style="overflow:auto; flex:1; padding-right:4px">
+          <div v-for="group in library" :key="group.category" style="margin-bottom:16px">
+            <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-dim); margin-bottom:8px">{{ group.category }}</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px">
+              <button
+                v-for="it in group.items" :key="it.name"
+                class="lib-chip"
+                :class="{ 'lib-chip-on': picked.has(it.name), 'lib-chip-have': existingNames.has(it.name.toLowerCase()) }"
+                :disabled="existingNames.has(it.name.toLowerCase())"
+                @click="togglePick(it)"
+              >
+                {{ it.name }} <span class="lib-unit">{{ it.unit }}</span>
+                <span v-if="existingNames.has(it.name.toLowerCase())" class="lib-have-tag">have</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" @click="showLibrary = false">Cancel</button>
+          <button class="btn btn-primary" :disabled="!picked.size || addingLib" @click="addFromLibrary">
+            {{ addingLib ? 'Adding…' : (picked.size ? `Add ${picked.size} ingredient${picked.size === 1 ? '' : 's'}` : 'Select items') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- CSV Import -->
     <div class="modal-overlay" v-if="showImport" @click.self="closeImport">
       <div class="modal" style="width: 560px">
@@ -239,8 +276,45 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useIngredientsStore } from '../stores/ingredients'
 import { getRegion, suppliersForRegion } from '../data/suppliers'
+import { INGREDIENT_LIBRARY } from '../data/ingredient_library'
 
 const store = useIngredientsStore()
+
+// ── Starter library ────────────────────────────────────────
+const library = INGREDIENT_LIBRARY
+const showLibrary = ref(false)
+const picked = ref(new Set())
+const addingLib = ref(false)
+
+const existingNames = computed(() => new Set(store.ingredients.map((i) => i.name.trim().toLowerCase())))
+
+function openLibrary() {
+  picked.value = new Set()
+  showLibrary.value = true
+}
+function togglePick(it) {
+  const s = new Set(picked.value)
+  s.has(it.name) ? s.delete(it.name) : s.add(it.name)
+  picked.value = s
+}
+async function addFromLibrary() {
+  const rows = []
+  for (const g of library) {
+    for (const it of g.items) {
+      if (picked.value.has(it.name) && !existingNames.value.has(it.name.toLowerCase())) {
+        rows.push({ name: it.name, unit: it.unit, cost_per_unit: 0 })
+      }
+    }
+  }
+  if (!rows.length) { showLibrary.value = false; return }
+  addingLib.value = true
+  try {
+    await store.addMany(rows)
+    showLibrary.value = false
+  } finally {
+    addingLib.value = false
+  }
+}
 
 // Realistic suppliers for the user's region + any they've already used.
 const supplierSuggestions = computed(() => {
@@ -460,4 +534,17 @@ async function runImport() {
   border-color: var(--amber, #fbbf24);
   background: rgba(251, 191, 36, 0.06);
 }
+
+.lib-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 999px; font-size: 13px; cursor: pointer;
+  background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--border); transition: all 0.12s;
+}
+.lib-chip:hover { border-color: var(--text-dim); }
+.lib-chip-on { background: rgba(245,158,11,0.16); color: var(--accent); border-color: rgba(245,158,11,0.45); }
+.lib-chip-have { opacity: 0.5; cursor: default; }
+.lib-unit { font-size: 11px; color: var(--text-dim); }
+.lib-chip-on .lib-unit { color: var(--accent); }
+.lib-have-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-left: 2px; }
 </style>
