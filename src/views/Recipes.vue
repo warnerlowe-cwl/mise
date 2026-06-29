@@ -156,8 +156,15 @@
           </div>
         </div>
 
+        <!-- Premium upsell (free users) -->
+        <div v-if="!auth.hasActiveLicense" style="margin: 4px 0 16px; padding: 10px 12px; background: var(--surface-2); border: 1px dashed var(--border); border-radius: 8px; color: var(--text-dim); font-size: 12.5px">
+          🔒 <strong style="color:var(--text)">Sub-recipes</strong> (use a recipe as a component) and
+          <strong style="color:var(--text)">Sizes</strong> (S/L pricing) are premium —
+          <router-link to="/plans" style="color:var(--accent)">upgrade to unlock</router-link>.
+        </div>
+
         <!-- Sub-recipes / components -->
-        <div style="margin-top: 8px; margin-bottom: 16px" v-if="componentChoices.length">
+        <div style="margin-top: 8px; margin-bottom: 16px" v-if="auth.hasActiveLicense && componentChoices.length">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
             <label class="form-label" style="margin: 0">Sub-recipes <span style="color:var(--text-muted); font-weight:400">— use another recipe as a component</span></label>
             <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 12px" @click="addComponent">+ Add</button>
@@ -173,7 +180,7 @@
         </div>
 
         <!-- Sizes -->
-        <div style="margin-top: 8px; margin-bottom: 16px">
+        <div style="margin-top: 8px; margin-bottom: 16px" v-if="auth.hasActiveLicense">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
             <label class="form-label" style="margin: 0">Sizes <span style="color:var(--text-muted); font-weight:400">— sell at multiple sizes (S/L, 12/16oz, scoops)</span></label>
             <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 12px" @click="addSize">+ Add</button>
@@ -227,9 +234,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRecipesStore } from '../stores/recipes'
 import { useIngredientsStore } from '../stores/ingredients'
+import { useAuthStore } from '../stores/auth'
 
 const store = useRecipesStore()
 const ingredientsStore = useIngredientsStore()
+const auth = useAuthStore()
 
 const search = ref('')
 const showModal = ref(false)

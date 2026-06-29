@@ -44,21 +44,21 @@
             <path d="M10 3v14M3 10h14"/>
             <path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/>
           </svg>
-          Batch Calculator
+          Batch Calculator<span v-if="premiumLocked" class="nav-lock">🔒</span>
         </RouterLink>
         <RouterLink to="/prep" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 3h12v3H4zM5 6l1 11h8l1-11"/>
             <path d="M8 9v5M12 9v5"/>
           </svg>
-          Prep Planner
+          Prep Planner<span v-if="premiumLocked" class="nav-lock">🔒</span>
         </RouterLink>
         <RouterLink to="/specs" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 13V3h7l3 3v7"/>
             <path d="M6 13h9v4H6zM6 6h5M6 8.5h3"/>
           </svg>
-          Spec Sheets
+          Spec Sheets<span v-if="premiumLocked" class="nav-lock">🔒</span>
         </RouterLink>
         <div class="nav-section">Pricing &amp; profit</div>
         <RouterLink to="/pricing" class="nav-item">
@@ -72,28 +72,28 @@
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10 2l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4L5.5 15.7l.9-5L2.8 7.2l5-.7L10 2z"/>
           </svg>
-          Menu Engineering
+          Menu Engineering<span v-if="premiumLocked" class="nav-lock">🔒</span>
         </RouterLink>
         <RouterLink to="/plate" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="10" cy="10" r="7.5"/>
             <circle cx="10" cy="10" r="3"/>
           </svg>
-          Plate Cost
+          Plate Cost<span v-if="premiumLocked" class="nav-lock">🔒</span>
         </RouterLink>
         <RouterLink to="/sizes" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 16V9M10 16V5M14 16v-4"/>
             <path d="M3 16h14"/>
           </svg>
-          Sizes
+          Sizes<span v-if="premiumLocked" class="nav-lock">🔒</span>
         </RouterLink>
         <RouterLink to="/menu-card" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <rect x="4" y="2.5" width="12" height="15" rx="1.5"/>
             <path d="M7 6h6M7 9h6M7 12h4"/>
           </svg>
-          Menu Card
+          Menu Card<span v-if="premiumLocked" class="nav-lock">🔒</span>
         </RouterLink>
         <div class="nav-section">Stock &amp; suppliers</div>
         <RouterLink to="/inventory" class="nav-item">
@@ -114,14 +114,14 @@
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 4v12M6 4L3 8h6L6 4zM14 4v12M14 16l-3-4h6l-3 4z"/>
           </svg>
-          Compare Prices
+          Compare Prices<span v-if="premiumLocked" class="nav-lock">🔒</span>
         </RouterLink>
         <RouterLink to="/prices" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 14l4-4 3 3 7-7"/>
             <path d="M14 3h3v3"/>
           </svg>
-          Price Trends
+          Price Trends<span v-if="premiumLocked" class="nav-lock">🔒</span>
         </RouterLink>
         <RouterLink to="/allergens" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -192,13 +192,16 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 
 const authStore = useAuthStore()
+
+// Premium features are locked for signed-in users without an active license.
+const premiumLocked = computed(() => authStore.isLoggedIn && !authStore.hasActiveLicense)
 
 // Auto-update: on launch, quietly check for a newer signed release; if there is one,
 // download + install it and relaunch into the new version. Wrapped so it's a harmless
@@ -339,6 +342,7 @@ body {
   opacity: 0.7;
   padding: 12px 10px 4px;
 }
+.nav-lock { margin-left: auto; font-size: 11px; opacity: 0.7; }
 
 .nav-item {
   display: flex;

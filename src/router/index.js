@@ -27,26 +27,28 @@ const routes = [
   { path: '/',            redirect: '/dashboard' },
   { path: '/login',       component: Login,       meta: { public: true } },
   { path: '/plans',       component: Plans,       meta: { public: true } },
+  // Free/core
   { path: '/dashboard',   component: Dashboard,   meta: { title: 'Dashboard' } },
   { path: '/ingredients', component: Ingredients, meta: { title: 'Ingredients' } },
   { path: '/recipes',     component: Recipes,     meta: { title: 'Recipes' } },
   { path: '/pricing',     component: MenuPricing, meta: { title: 'Menu Pricing' } },
-  { path: '/menu',        component: MenuEngineering, meta: { title: 'Menu Engineering' } },
-  { path: '/plate',       component: PlateCost,  meta: { title: 'Plate Cost' } },
-  { path: '/sizes',       component: Sizes,      meta: { title: 'Sizes' } },
-  { path: '/menu-card',   component: PrintMenu,  meta: { title: 'Menu Card' } },
   { path: '/inventory',   component: Inventory,   meta: { title: 'Inventory' } },
-  { path: '/prices',      component: PriceTrends, meta: { title: 'Price Trends' } },
-  { path: '/scale',       component: Scaling,    meta: { title: 'Batch Calculator' } },
-  { path: '/prep',        component: PrepPlanner, meta: { title: 'Prep Planner' } },
-  { path: '/specs',       component: SpecSheets, meta: { title: 'Spec Sheets' } },
   { path: '/allergens',   component: Allergens,  meta: { title: 'Allergens' } },
   { path: '/suppliers',   component: Suppliers,  meta: { title: 'Suppliers' } },
-  { path: '/compare',     component: PriceCompare, meta: { title: 'Compare Prices' } },
   { path: '/waste',       component: WasteTracker, meta: { title: 'Waste Tracker' } },
   { path: '/conversions', component: Conversions, meta: { title: 'Conversions' } },
   { path: '/reports',     component: Reports,     meta: { title: 'Reports' } },
   { path: '/settings',    component: Settings,    meta: { title: 'Settings' } },
+  // Premium (require an active license)
+  { path: '/menu',        component: MenuEngineering, meta: { title: 'Menu Engineering', premium: true } },
+  { path: '/plate',       component: PlateCost,  meta: { title: 'Plate Cost', premium: true } },
+  { path: '/sizes',       component: Sizes,      meta: { title: 'Sizes', premium: true } },
+  { path: '/menu-card',   component: PrintMenu,  meta: { title: 'Menu Card', premium: true } },
+  { path: '/prices',      component: PriceTrends, meta: { title: 'Price Trends', premium: true } },
+  { path: '/scale',       component: Scaling,    meta: { title: 'Batch Calculator', premium: true } },
+  { path: '/prep',        component: PrepPlanner, meta: { title: 'Prep Planner', premium: true } },
+  { path: '/specs',       component: SpecSheets, meta: { title: 'Spec Sheets', premium: true } },
+  { path: '/compare',     component: PriceCompare, meta: { title: 'Compare Prices', premium: true } },
 ]
 
 const router = createRouter({
@@ -70,15 +72,15 @@ router.beforeEach(async (to) => {
 
   if (!auth.isLoggedIn) return '/login'
 
-  // Paywall: the app requires an ACTIVE license. Make sure we've actually fetched the
-  // license before deciding — otherwise a paying user could be bounced to /plans simply
-  // because it hadn't loaded yet (the old race). Comp accounts have active licenses and
-  // pass straight through. A transient fetch error leaves the license unset → /plans,
-  // which is recoverable on reload once the network is back.
-  if (!auth.license) {
-    try { await auth.refreshLicense() } catch (_) { /* treated as no active license */ }
+  // Freemium: anyone signed in can use the core app for free. PREMIUM routes require an
+  // active license. We fetch the license before gating so a paying user is never bounced
+  // on the old race; a transient fetch error just means premium stays locked until reload.
+  if (to.meta.premium) {
+    if (!auth.license) {
+      try { await auth.refreshLicense() } catch (_) { /* treated as no active license */ }
+    }
+    if (!auth.hasActiveLicense) return '/plans'
   }
-  if (!auth.hasActiveLicense) return '/plans'
 
   return true
 })

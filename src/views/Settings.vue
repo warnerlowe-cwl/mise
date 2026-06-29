@@ -49,8 +49,9 @@
       </p>
       <div class="settings-actions" style="flex-wrap: wrap; gap: 10px">
         <button class="btn btn-primary" :disabled="busy" @click="exportBackup">⬇ Export backup (.json)</button>
-        <button class="btn btn-ghost" :disabled="busy" @click="exportCsv">Export ingredients (.csv)</button>
-        <button class="btn btn-ghost" :disabled="busy" @click="exportRecipesCsv">Export recipes (.csv)</button>
+        <button v-if="authStore.hasActiveLicense" class="btn btn-ghost" :disabled="busy" @click="exportCsv">Export ingredients (.csv)</button>
+        <button v-if="authStore.hasActiveLicense" class="btn btn-ghost" :disabled="busy" @click="exportRecipesCsv">Export recipes (.csv)</button>
+        <router-link v-else to="/plans" class="btn btn-ghost" style="text-decoration:none">🔒 CSV export (premium)</router-link>
         <button class="btn btn-ghost" :disabled="busy" @click="$refs.restoreInput.click()">↺ Restore from backup…</button>
         <button class="btn btn-ghost" :disabled="busy" @click="loadSample">✨ Load sample data</button>
         <input ref="restoreInput" type="file" accept="application/json,.json" style="display:none" @change="restoreBackup" />
