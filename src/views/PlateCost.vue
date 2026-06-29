@@ -7,6 +7,14 @@
       </div>
     </div>
 
+    <div class="card" style="margin-top:16px; padding:12px 16px; background:rgba(96,165,250,0.06); border:1px solid rgba(96,165,250,0.25)">
+      <p style="margin:0; font-size:13px; color:var(--text-dim); line-height:1.6">
+        ℹ️ <strong style="color:var(--text)">“Plate” just means one thing you sell</strong> — a dish, a latte, a
+        scoop, a pastry. Plate cost is what it costs to <strong style="color:var(--text)">make and serve one of them</strong>
+        (ingredients + labor), whatever it is.
+      </p>
+    </div>
+
     <div class="card" style="padding:16px; margin-top:16px; display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap">
       <div>
         <label class="form-label">Labor rate ($/hour)</label>
