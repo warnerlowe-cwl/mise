@@ -103,6 +103,12 @@
           </svg>
           Suppliers
         </RouterLink>
+        <RouterLink to="/compare" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 4v12M6 4L3 8h6L6 4zM14 4v12M14 16l-3-4h6l-3 4z"/>
+          </svg>
+          Compare Prices
+        </RouterLink>
         <RouterLink to="/prices" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 14l4-4 3 3 7-7"/>

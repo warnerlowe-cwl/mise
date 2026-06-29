@@ -213,6 +213,20 @@ async function initSchema() {
     try { await db.execute(`ALTER TABLE ingredients ADD COLUMN ${col}`) } catch (_) { /* already exists */ }
   }
 
+  // Supplier price comparison — multiple supplier quotes per ingredient (per the
+  // ingredient's unit), so the user can compare and pick the best. The ingredient's own
+  // cost_per_unit + supplier remain the "active" choice that drives recipe costing.
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS supplier_prices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ingredient_id INTEGER NOT NULL,
+      supplier TEXT NOT NULL,
+      price REAL NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE
+    )
+  `)
+
   // Supplier price history — one row each time an ingredient's cost changes, so we can
   // chart cost creep over time and flag the biggest movers.
   await db.execute(`

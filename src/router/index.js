@@ -14,6 +14,7 @@ import MenuEngineering from '../views/MenuEngineering.vue'
 import SpecSheets from '../views/SpecSheets.vue'
 import PlateCost from '../views/PlateCost.vue'
 import PrintMenu from '../views/PrintMenu.vue'
+import PriceCompare from '../views/PriceCompare.vue'
 import WasteTracker from '../views/WasteTracker.vue'
 import Conversions from '../views/Conversions.vue'
 import Reports from '../views/Reports.vue'
@@ -39,6 +40,7 @@ const routes = [
   { path: '/specs',       component: SpecSheets, meta: { title: 'Spec Sheets' } },
   { path: '/allergens',   component: Allergens,  meta: { title: 'Allergens' } },
   { path: '/suppliers',   component: Suppliers,  meta: { title: 'Suppliers' } },
+  { path: '/compare',     component: PriceCompare, meta: { title: 'Compare Prices' } },
   { path: '/waste',       component: WasteTracker, meta: { title: 'Waste Tracker' } },
   { path: '/conversions', component: Conversions, meta: { title: 'Conversions' } },
   { path: '/reports',     component: Reports,     meta: { title: 'Reports' } },

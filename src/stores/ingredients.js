@@ -5,6 +5,7 @@ export const useIngredientsStore = defineStore('ingredients', {
   state: () => ({
     ingredients: [],
     priceHistory: {},   // ingredient_id -> [{ cost_per_unit, recorded_at }, ...] oldest→newest
+    quotes: {},         // ingredient_id -> [{ id, supplier, price, updated_at }, ...]
     loading: false,
     error: null,
   }),
@@ -35,6 +36,40 @@ export const useIngredientsStore = defineStore('ingredients', {
       const map = {}
       for (const r of rows) (map[r.ingredient_id] ||= []).push(r)
       this.priceHistory = map
+    },
+
+    // Supplier price comparison: load all quotes, grouped by ingredient (cheapest first).
+    async loadQuotes() {
+      const db = await getDb()
+      const rows = await db.select('SELECT * FROM supplier_prices ORDER BY price ASC')
+      const map = {}
+      for (const r of rows) (map[r.ingredient_id] ||= []).push(r)
+      this.quotes = map
+    },
+
+    async addQuote(ingredientId, supplier, price) {
+      const db = await getDb()
+      await db.execute(
+        'INSERT INTO supplier_prices (ingredient_id, supplier, price) VALUES (?, ?, ?)',
+        [ingredientId, supplier, price]
+      )
+      await this.loadQuotes()
+    },
+
+    async removeQuote(quoteId) {
+      const db = await getDb()
+      await db.execute('DELETE FROM supplier_prices WHERE id=?', [quoteId])
+      await this.loadQuotes()
+    },
+
+    // Make a quote the active price (drives recipe costing + logs to price history).
+    async setActiveQuote(ingredientId, supplier, price) {
+      const ing = this.ingredients.find((i) => i.id === ingredientId)
+      if (!ing) return
+      await this.update(ingredientId, {
+        name: ing.name, unit: ing.unit, cost_per_unit: price, supplier,
+        notes: ing.notes, pack_price: ing.pack_price, pack_size: ing.pack_size, pack_label: ing.pack_label,
+      })
     },
 
     // Record a price point for an ingredient (used on create + whenever cost changes).
