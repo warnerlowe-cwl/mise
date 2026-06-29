@@ -17,22 +17,61 @@ export const useRecipesStore = defineStore('recipes', {
       this.loading = true
       try {
         const db = await getDb()
-        // Cost divides by usable yield: a 80%-yield item effectively costs 1/0.8 more per
-        // usable unit. NULL/0 yield = treat as 100% (no loss).
-        this.recipes = await db.select(`
+        // Base cost from ingredient lines. Yield-adjusted: an 80%-yield item effectively
+        // costs 1/0.8 more per usable unit. NULL/0 yield = 100% (no loss).
+        const rows = await db.select(`
           SELECT r.*,
-            COALESCE(SUM(ri.quantity * i.cost_per_unit / (COALESCE(NULLIF(i.yield_pct,0),100)/100.0)), 0) AS total_cost
+            COALESCE(SUM(ri.quantity * i.cost_per_unit / (COALESCE(NULLIF(i.yield_pct,0),100)/100.0)), 0) AS base_cost
           FROM recipes r
           LEFT JOIN recipe_ingredients ri ON r.id = ri.recipe_id
           LEFT JOIN ingredients i ON ri.ingredient_id = i.id
           GROUP BY r.id
           ORDER BY r.name ASC
         `)
+        const components = await db.select('SELECT parent_recipe_id, child_recipe_id, servings_used FROM recipe_components')
+
+        // Roll sub-recipe costs into each recipe's total. A child contributes
+        // (child total cost / child servings) × servings_used. Memoized + cycle-guarded.
+        const byId = {}
+        for (const r of rows) byId[r.id] = r
+        const compsByParent = {}
+        for (const c of components) (compsByParent[c.parent_recipe_id] ||= []).push(c)
+
+        const memo = {}
+        const fullCost = (rid, stack = new Set()) => {
+          if (memo[rid] != null) return memo[rid]
+          const r = byId[rid]
+          if (!r || stack.has(rid)) return r ? Number(r.base_cost) || 0 : 0
+          stack.add(rid)
+          let total = Number(r.base_cost) || 0
+          for (const c of compsByParent[rid] || []) {
+            const child = byId[c.child_recipe_id]
+            if (!child) continue
+            const perServing = fullCost(c.child_recipe_id, stack) / (Number(child.servings) || 1)
+            total += perServing * (Number(c.servings_used) || 0)
+          }
+          stack.delete(rid)
+          memo[rid] = total
+          return total
+        }
+        for (const r of rows) r.total_cost = fullCost(r.id)
+        this.recipes = rows
       } catch (e) {
         this.error = e.message
       } finally {
         this.loading = false
       }
+    },
+
+    // Sub-recipe components of a recipe (with child name + servings for display).
+    async getComponents(recipeId) {
+      const db = await getDb()
+      return await db.select(`
+        SELECT rc.*, cr.name AS child_name, cr.servings AS child_servings
+        FROM recipe_components rc
+        JOIN recipes cr ON rc.child_recipe_id = cr.id
+        WHERE rc.parent_recipe_id = ?
+      `, [recipeId])
     },
 
     async getIngredients(recipeId) {
@@ -46,7 +85,7 @@ export const useRecipesStore = defineStore('recipes', {
       `, [recipeId])
     },
 
-    async add(recipe, lines) {
+    async add(recipe, lines, components = []) {
       const db = await getDb()
       await db.execute(
         'INSERT INTO recipes (name, category, servings, notes) VALUES (?, ?, ?, ?)',
@@ -60,10 +99,11 @@ export const useRecipesStore = defineStore('recipes', {
           [recipeId, line.ingredient_id, line.quantity, line.unit]
         )
       }
+      await this._saveComponents(db, recipeId, components)
       await this.fetchAll()
     },
 
-    async update(id, recipe, lines) {
+    async update(id, recipe, lines, components = []) {
       const db = await getDb()
       await db.execute(
         'UPDATE recipes SET name=?, category=?, servings=?, notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
@@ -76,7 +116,21 @@ export const useRecipesStore = defineStore('recipes', {
           [id, line.ingredient_id, line.quantity, line.unit]
         )
       }
+      await this._saveComponents(db, id, components)
       await this.fetchAll()
+    },
+
+    // Replace a recipe's sub-recipe components. Skips self-references.
+    async _saveComponents(db, recipeId, components) {
+      await db.execute('DELETE FROM recipe_components WHERE parent_recipe_id=?', [recipeId])
+      for (const c of components || []) {
+        if (!c.child_recipe_id || Number(c.child_recipe_id) === Number(recipeId)) continue
+        if (!(Number(c.servings_used) > 0)) continue
+        await db.execute(
+          'INSERT INTO recipe_components (parent_recipe_id, child_recipe_id, servings_used) VALUES (?, ?, ?)',
+          [recipeId, c.child_recipe_id, c.servings_used]
+        )
+      }
     },
 
     // Menu pricing: persist a target food-cost % and/or a set menu price for a recipe.
@@ -110,6 +164,8 @@ export const useRecipesStore = defineStore('recipes', {
           [row.id, l.ingredient_id, l.quantity, l.unit]
         )
       }
+      const comps = await this.getComponents(id)
+      await this._saveComponents(db, row.id, comps)
       await this.fetchAll()
       return row.id
     },

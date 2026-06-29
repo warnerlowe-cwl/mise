@@ -148,6 +148,19 @@ async function initSchema() {
     )
   `)
 
+  // Sub-recipes / components: a recipe can include another recipe (e.g. buttercream,
+  // simple syrup, base dough) by number of the child's servings used. Cost rolls up.
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS recipe_components (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      parent_recipe_id INTEGER NOT NULL,
+      child_recipe_id INTEGER NOT NULL,
+      servings_used REAL NOT NULL,
+      FOREIGN KEY (parent_recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
+      FOREIGN KEY (child_recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+    )
+  `)
+
   await db.execute(`
     CREATE TABLE IF NOT EXISTS waste_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -145,9 +145,25 @@
           </div>
 
           <!-- Live cost preview -->
-          <div v-if="lines.length" style="margin-top: 12px; padding: 12px; background: var(--surface-2); border-radius: 6px; display: flex; justify-content: space-between">
+          <div v-if="lines.length || components.length" style="margin-top: 12px; padding: 12px; background: var(--surface-2); border-radius: 6px; display: flex; justify-content: space-between">
             <span style="color: var(--text-dim); font-size: 13px">Estimated Total Cost</span>
             <span style="color: var(--green); font-weight: 700">{{ cur }}{{ estimatedCost }}</span>
+          </div>
+        </div>
+
+        <!-- Sub-recipes / components -->
+        <div style="margin-top: 8px; margin-bottom: 16px" v-if="componentChoices.length">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
+            <label class="form-label" style="margin: 0">Sub-recipes <span style="color:var(--text-muted); font-weight:400">— use another recipe as a component</span></label>
+            <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 12px" @click="addComponent">+ Add</button>
+          </div>
+          <div v-for="(c, idx) in components" :key="idx" style="display: grid; grid-template-columns: 1fr 120px auto; gap: 8px; margin-bottom: 8px; align-items: center">
+            <select v-model="c.child_recipe_id" class="form-select">
+              <option value="">Select recipe</option>
+              <option v-for="rc in componentChoices" :key="rc.id" :value="rc.id">{{ rc.name }} (makes {{ rc.servings }})</option>
+            </select>
+            <input v-model="c.servings_used" class="form-input" type="number" step="0.01" min="0" placeholder="Servings" />
+            <button class="btn btn-danger" style="padding: 5px 10px" @click="removeComponent(idx)">✕</button>
           </div>
         </div>
 
@@ -192,6 +208,10 @@ const deleteTarget = ref(null)
 
 const form = ref({ name: '', category: '', servings: 1, notes: '' })
 const lines = ref([])
+const components = ref([])
+
+// Other recipes that can be used as components (exclude the one being edited).
+const componentChoices = computed(() => store.recipes.filter((r) => r.id !== editingId.value))
 
 const filtered = computed(() => {
   if (!search.value) return store.recipes
@@ -212,8 +232,22 @@ const estimatedCost = computed(() => {
       total += Number(line.quantity) * Number(ing.cost_per_unit) / (yieldFrac || 1)
     }
   }
+  // Add sub-recipe components: (child total cost / child servings) × servings used.
+  for (const c of components.value) {
+    const child = store.recipes.find(r => r.id === Number(c.child_recipe_id))
+    if (child && c.servings_used) {
+      total += (Number(child.total_cost) / (Number(child.servings) || 1)) * Number(c.servings_used)
+    }
+  }
   return total.toFixed(2)
 })
+
+function addComponent() {
+  components.value.push({ child_recipe_id: '', servings_used: '' })
+}
+function removeComponent(idx) {
+  components.value.splice(idx, 1)
+}
 
 onMounted(async () => {
   await Promise.all([store.fetchAll(), ingredientsStore.fetchAll()])
@@ -256,6 +290,7 @@ function openAdd() {
   editingId.value = null
   form.value = { name: '', category: '', servings: 1, notes: '' }
   lines.value = []
+  components.value = []
   showModal.value = true
 }
 
@@ -264,6 +299,8 @@ async function openEdit(r) {
   form.value = { name: r.name, category: r.category || '', servings: r.servings, notes: r.notes || '' }
   const ings = await store.getIngredients(r.id)
   lines.value = ings.map(i => ({ ingredient_id: i.ingredient_id, quantity: i.quantity, unit: i.unit }))
+  const comps = await store.getComponents(r.id)
+  components.value = comps.map(c => ({ child_recipe_id: c.child_recipe_id, servings_used: c.servings_used }))
   showModal.value = true
 }
 
@@ -271,15 +308,17 @@ function closeModal() {
   showModal.value = false
   editingId.value = null
   lines.value = []
+  components.value = []
 }
 
 async function save() {
   if (!isValid.value) return
   const validLines = lines.value.filter(l => l.ingredient_id && l.quantity)
+  const validComponents = components.value.filter(c => c.child_recipe_id && Number(c.servings_used) > 0)
   if (editingId.value) {
-    await store.update(editingId.value, form.value, validLines)
+    await store.update(editingId.value, form.value, validLines, validComponents)
   } else {
-    await store.add(form.value, validLines)
+    await store.add(form.value, validLines, validComponents)
   }
   closeModal()
 }
