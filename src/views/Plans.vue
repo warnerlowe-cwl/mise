@@ -67,7 +67,7 @@
       <div class="plan-card">
         <div class="plan-badge">Save $40</div>
         <div class="plan-label">6 Months</div>
-        <div class="plan-price">$150<span class="plan-per"> one-time</span></div>
+        <div class="plan-price">$80<span class="plan-per">/6 months</span></div>
         <div class="plan-desc">6 months upfront, no recurring charge.</div>
         <ul class="plan-features">
           <li>Full access to all features</li>
@@ -81,7 +81,7 @@
       <div class="plan-card plan-card-featured">
         <div class="plan-badge plan-badge-accent">Most Popular</div>
         <div class="plan-label">Yearly</div>
-        <div class="plan-price">$300<span class="plan-per">/year</span></div>
+        <div class="plan-price">$150<span class="plan-per">/year</span></div>
         <div class="plan-desc">Best value subscription — $25/mo effective.</div>
         <ul class="plan-features">
           <li>Full access to all features</li>
