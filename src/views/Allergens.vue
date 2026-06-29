@@ -9,11 +9,17 @@
 
     <!-- Menu allergens: auto-derived from each recipe's ingredients -->
     <h2 class="al-h2">Menu allergens</h2>
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px">
+      <span style="color:var(--text-dim); font-size:13px">Show only “free from”:</span>
+      <button v-for="a in ALLERGENS" :key="a" class="al-chip"
+        :class="{ 'al-chip-on': freeFrom.has(a) }" @click="toggleFree(a)">{{ a }}</button>
+      <button v-if="freeFrom.size" class="al-chip" @click="freeFrom = new Set()" style="border-style:dashed">Clear</button>
+    </div>
     <div class="card" style="padding:0; overflow:hidden">
-      <table class="table" v-if="recipes.length">
+      <table class="table" v-if="filteredRecipeRows.length">
         <thead><tr><th style="width:34%">Recipe</th><th>Contains</th></tr></thead>
         <tbody>
-          <tr v-for="r in recipeRows" :key="r.id">
+          <tr v-for="r in filteredRecipeRows" :key="r.id">
             <td style="font-weight:600">{{ r.name }}</td>
             <td>
               <template v-if="r.allergens.length">
@@ -25,8 +31,10 @@
         </tbody>
       </table>
       <div class="empty-state" v-else>
-        <div class="empty-state-title">No recipes yet</div>
-        <div class="empty-state-text">Add recipes and they'll show their combined allergens here.</div>
+        <div class="empty-state-title">{{ recipes.length ? 'Nothing matches' : 'No recipes yet' }}</div>
+        <div class="empty-state-text">
+          {{ recipes.length ? 'No recipes are free from all the allergens you picked.' : 'Add recipes and they\'ll show their combined allergens here.' }}
+        </div>
       </div>
     </div>
 
@@ -79,6 +87,13 @@ const ALLERGENS = [
 const ingStore = useIngredientsStore()
 const recStore = useRecipesStore()
 const search = ref('')
+const freeFrom = ref(new Set())
+
+function toggleFree(a) {
+  const s = new Set(freeFrom.value)
+  s.has(a) ? s.delete(a) : s.add(a)
+  freeFrom.value = s
+}
 const recipeAllergens = ref({}) // recipeId -> Set of allergen names
 
 onMounted(async () => {
@@ -111,6 +126,13 @@ const recipeRows = computed(() =>
     const ordered = ALLERGENS.filter((a) => set.has(a))
     return { id: r.id, name: r.name, allergens: ordered }
   })
+)
+
+// "Free from" filter: keep only recipes that contain NONE of the picked allergens.
+const filteredRecipeRows = computed(() =>
+  freeFrom.value.size === 0
+    ? recipeRows.value
+    : recipeRows.value.filter((r) => !r.allergens.some((a) => freeFrom.value.has(a)))
 )
 
 const ingredientRows = computed(() => {
