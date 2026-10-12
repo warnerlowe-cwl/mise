@@ -1,0 +1,11 @@
+# Runs on pronghorn on every push: the app's screens must still build. (The desktop
+# installers are built elsewhere; this only checks the web part.)
+name: Build
+on: [push]
+jobs:
+  build:
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run build
