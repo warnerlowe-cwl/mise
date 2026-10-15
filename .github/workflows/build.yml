@@ -93,7 +93,7 @@ jobs:
           releaseName: Mise ${{ github.ref_name }}
           releaseBody: |
             ## Mise ${{ github.ref_name }}
-            **Restaurant & hospitality management — by CrownWell Labs**
+            **Food cost app for independent kitchens, by CrownWell Labs**
             Download at [crownwelllabs.com/downloads](https://crownwelllabs.com/downloads)
           releaseDraft: true
           prerelease: false
@@ -116,7 +116,7 @@ jobs:
           releaseName: Mise ${{ github.ref_name }}
           releaseBody: |
             ## Mise ${{ github.ref_name }}
-            **Restaurant & hospitality management — by CrownWell Labs**
+            **Food cost app for independent kitchens, by CrownWell Labs**
             Download at [crownwelllabs.com/downloads](https://crownwelllabs.com/downloads)
           releaseDraft: true
           prerelease: false
@@ -198,9 +198,9 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           {
-            echo "## Mise ${TAG}"
+            echo "## MenuCents ${TAG}"
             echo ""
-            echo "Restaurant & hospitality management — by CrownWell Labs"
+            echo "Food cost app for independent kitchens, by CrownWell Labs"
             echo ""
             echo "### Download"
             if [ "$HAS_R2" = "true" ]; then
@@ -214,6 +214,6 @@ jobs:
               echo "Installers for **Windows**, **macOS**, and **Linux** are attached to this release below."
             fi
             echo ""
-            echo "> Sign in at [crownwelllabs.com/downloads](https://crownwelllabs.com/downloads)"
+            echo "> Download at [menucents.com/download](https://menucents.com/download/)"
           } > /tmp/notes.md
           gh release edit "$TAG" --repo warnerlowe-cwl/mise --draft=false --notes-file /tmp/notes.md

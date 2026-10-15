@@ -38,7 +38,7 @@ for n in names:
 
 manifest = {
     "version": TAG.lstrip('v'),
-    "notes": "A new version of Mise is available.",
+    "notes": "A new version of MenuCents is available.",
     "pub_date": datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
     "platforms": platforms,
 }
