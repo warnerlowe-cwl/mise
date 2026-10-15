@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h1 class="page-title">Compare Prices</h1>
-        <p class="page-subtitle">Record what each supplier charges and let Mise find the cheapest</p>
+        <p class="page-subtitle">Record what each supplier charges and let MenuCents find the cheapest</p>
       </div>
     </div>
 
@@ -62,7 +62,7 @@
 
     <div class="card" style="margin-top:16px; padding:16px">
       <p style="color:var(--text-dim); font-size:13px; margin:0; line-height:1.6">
-        💡 Add a price quote for each supplier of an ingredient (straight off their invoice). Mise flags the
+        💡 Add a price quote for each supplier of an ingredient (straight off their invoice). MenuCents flags the
         <strong style="color:var(--text)">cheapest</strong> and shows what you'd save. Hit
         <strong style="color:var(--text)">Use this</strong> to make a supplier the active price — that flows into your
         recipe costs and Price Trends. Pack sizing keeps it fair: enter each in the same unit and they compare apples-to-apples.

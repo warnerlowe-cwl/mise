@@ -90,7 +90,7 @@
       <div class="card" style="margin-top:16px; padding:16px">
         <p style="color:var(--text-dim); font-size:13px; margin:0; line-height:1.6">
           💡 Need 60 covers tonight but the recipe makes 12? Type <strong style="color:var(--text)">60</strong>
-          into “Scale to servings” and Mise multiplies every ingredient for you, totals the batch cost, and
+          into “Scale to servings” and MenuCents multiplies every ingredient for you, totals the batch cost, and
           gives you a shopping list to copy straight into an order. No math, no over-buying.
         </p>
       </div>

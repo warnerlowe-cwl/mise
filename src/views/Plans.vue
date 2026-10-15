@@ -8,7 +8,7 @@
           <path d="M5 5V3.5M7 5.5V3M9 5V3.5"/>
         </svg>
       </div>
-      <h1 class="plans-title">Choose your Mise plan</h1>
+      <h1 class="plans-title">Choose your MenuCents plan</h1>
       <p class="plans-sub">Activate your license to start managing your kitchen costs</p>
       <p class="plans-account">Signed in as <strong>{{ authStore.user?.email }}</strong> ·
         <button class="link-btn" @click="authStore.signOut()">Sign out</button>

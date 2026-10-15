@@ -19,7 +19,7 @@
           placeholder="e.g. Isebel's Cafe"
           @keydown.enter="save"
         />
-        <p class="settings-hint">Your bakery, cafe, or kitchen name — shown across Mise.</p>
+        <p class="settings-hint">Your bakery, cafe, or kitchen name — shown across MenuCents.</p>
       </div>
       <div class="form-group">
         <label class="form-label">Email</label>
@@ -30,7 +30,7 @@
         <select v-model="region" class="form-input" @change="saveRegion">
           <option v-for="r in REGIONS" :key="r.code" :value="r.code">{{ r.label }}</option>
         </select>
-        <p class="settings-hint">Sets which real suppliers Mise suggests (Sysco, Brakes, etc.). You can always add your own.</p>
+        <p class="settings-hint">Sets which real suppliers MenuCents suggests (Sysco, Brakes, etc.). You can always add your own.</p>
       </div>
       <div class="settings-actions">
         <button class="btn btn-primary" :disabled="saving" @click="save">
@@ -198,7 +198,7 @@ async function restoreBackup(ev) {
   busy.value = true
   try {
     const payload = JSON.parse(await file.text())
-    if (payload?.app !== 'mise' || !payload?.tables) throw new Error('Not a valid Mise backup file')
+    if (payload?.app !== 'mise' || !payload?.tables) throw new Error('Not a valid MenuCents backup file')
     const n = await importAll(payload)
     dataMsg.value = `✓ Restored ${n} records. Reloading…`
     setTimeout(() => window.location.reload(), 800)

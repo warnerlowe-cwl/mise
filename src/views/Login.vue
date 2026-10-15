@@ -11,7 +11,7 @@
           </svg>
         </div>
         <div>
-          <div class="auth-app-name">Mise</div>
+          <div class="auth-app-name">MenuCents</div>
           <div class="auth-tagline">by CrownWell Labs</div>
         </div>
       </div>

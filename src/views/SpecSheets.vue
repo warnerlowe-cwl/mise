@@ -63,7 +63,7 @@
           <p>{{ recipe.notes }}</p>
         </div>
 
-        <div class="spec-foot">Mise · printed {{ today }}</div>
+        <div class="spec-foot">MenuCents · printed {{ today }}</div>
       </div>
     </div>
 

@@ -49,7 +49,7 @@
     <div class="card" style="margin-top:16px; padding:16px">
       <p style="color:var(--text-dim); font-size:13px; margin:0; line-height:1.6">
         💡 A size's cost is the recipe's base cost per serving × its portion multiplier. Set a price per size and
-        Mise shows the margin and food-cost % for each — so a 16oz latte and a single scoop are each priced right,
+        MenuCents shows the margin and food-cost % for each — so a 16oz latte and a single scoop are each priced right,
         not guessed from the regular size.
       </p>
     </div>

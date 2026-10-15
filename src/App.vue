@@ -10,7 +10,7 @@
             <path d="M5 5V3.5M7 5.5V3M9 5V3.5"/>
           </svg>
         </div>
-        <span class="logo-text">Mise</span>
+        <span class="logo-text">MenuCents</span>
       </div>
 
       <nav class="nav">
@@ -177,7 +177,7 @@
           </div>
           <button class="signout-btn" @click="authStore.signOut()">Sign out</button>
         </template>
-        <span v-else class="version">Mise v1.0 · CrownWell Labs</span>
+        <span v-else class="version">MenuCents · CrownWell Labs</span>
       </div>
     </aside>
 

@@ -63,7 +63,7 @@
 
     <div class="card" style="margin-top:16px; padding:16px">
       <p style="color:var(--text-dim); font-size:13px; margin:0; line-height:1.6">
-        💡 Planning a service? Punch in how many of each dish you expect to sell. Mise scales every
+        💡 Planning a service? Punch in how many of each dish you expect to sell. MenuCents scales every
         recipe, <strong style="color:var(--text)">merges shared ingredients</strong> (flour used in three
         dishes shows once, totalled), and gives you a single costed shopping list to prep or order from.
       </p>

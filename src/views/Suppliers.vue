@@ -86,7 +86,7 @@
 
     <div class="card" style="margin-top:16px; padding:16px">
       <p style="color:var(--text-dim); font-size:13px; margin:0; line-height:1.6">
-        💡 Mise groups ingredients by the <strong style="color:var(--text)">supplier</strong> you set on each one.
+        💡 MenuCents groups ingredients by the <strong style="color:var(--text)">supplier</strong> you set on each one.
         When stock drops below par, that supplier shows an <strong style="color:var(--text)">Order needed</strong>
         sheet — hit <strong style="color:var(--text)">Copy order</strong> to send each vendor exactly their list,
         not one big mixed order.

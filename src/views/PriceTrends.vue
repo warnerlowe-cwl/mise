@@ -69,7 +69,7 @@
         <div class="empty-state-text">
           {{ onlyChanged
             ? 'Edit an ingredient\'s cost and the change will show up here.'
-            : 'Add ingredients and Mise starts tracking their price from day one.' }}
+            : 'Add ingredients and MenuCents starts tracking their price from day one.' }}
         </div>
       </div>
     </div>
@@ -77,7 +77,7 @@
     <div class="card" style="margin-top:16px; padding:16px">
       <p style="color:var(--text-dim); font-size:13px; margin:0; line-height:1.6">
         💡 Every time you change an ingredient's <strong style="color:var(--text)">cost per unit</strong>,
-        Mise logs it here. Over a few months you'll see which suppliers keep nudging prices up — and by
+        MenuCents logs it here. Over a few months you'll see which suppliers keep nudging prices up — and by
         how much — so you can renegotiate, swap suppliers, or reprice your menu before margins slip.
       </p>
     </div>

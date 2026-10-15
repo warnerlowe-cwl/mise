@@ -10,7 +10,7 @@
     <!-- First-run welcome -->
     <div v-if="isEmpty" class="welcome">
       <div class="welcome-emoji">👋</div>
-      <h2 class="welcome-title">Welcome to Mise</h2>
+      <h2 class="welcome-title">Welcome to MenuCents</h2>
       <p class="welcome-text">
         Cost your recipes, price your menu, track stock and suppliers, and catch cost creep before it
         eats your margin. Want to see it all in action first?
@@ -20,7 +20,7 @@
         <select v-model="welcomeRegion" class="form-input" style="width:auto" @change="setRegion(welcomeRegion); applyRegionCurrency()">
           <option v-for="r in REGIONS" :key="r.code" :value="r.code">{{ r.label }}</option>
         </select>
-        <span class="welcome-region-hint">sets the suppliers Mise suggests</span>
+        <span class="welcome-region-hint">sets the suppliers MenuCents suggests</span>
       </div>
       <div class="welcome-actions">
         <button class="btn btn-primary" :disabled="seeding" @click="loadSample">
