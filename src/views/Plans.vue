@@ -123,33 +123,6 @@
         </button>
       </div>
 
-      <!-- Solo Lifetime -->
-      <div class="plan-card">
-        <div class="plan-label">Solo Lifetime</div>
-        <div class="plan-price">$900<span class="plan-per"> once</span></div>
-        <div class="plan-desc">One kitchen, yours forever. No renewals.</div>
-        <ul class="plan-features">
-          <li>Full access — forever</li>
-          <li>1 installation</li>
-          <li>All future updates included</li>
-        </ul>
-        <button class="btn btn-ghost plan-btn" :disabled="buyingSession" @click="buyFixed('solo_lifetime')">{{ buyingSession ? 'Loading…' : 'Buy Lifetime' }}</button>
-      </div>
-
-      <!-- Business Lifetime -->
-      <div class="plan-card">
-        <div class="plan-label">Business Lifetime</div>
-        <div class="plan-price">$3,000<span class="plan-per"> once</span></div>
-        <div class="plan-desc">Multi-location or team access. Never pay again.</div>
-        <ul class="plan-features">
-          <li>Full access — forever</li>
-          <li>Up to 5 installations</li>
-          <li>All future updates included</li>
-          <li>Priority support</li>
-        </ul>
-        <button class="btn btn-ghost plan-btn" :disabled="buyingSession" @click="buyFixed('business_lifetime')">{{ buyingSession ? 'Loading…' : 'Buy Lifetime' }}</button>
-      </div>
-
     </div>
 
     <!-- Already paid check -->
