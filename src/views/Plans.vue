@@ -65,14 +65,14 @@
 
       <!-- 6-Month -->
       <div class="plan-card">
-        <div class="plan-badge">Save $40</div>
+        <div class="plan-badge">Save $10</div>
         <div class="plan-label">6 Months</div>
         <div class="plan-price">$80<span class="plan-per">/6 months</span></div>
-        <div class="plan-desc">6 months upfront, no recurring charge.</div>
+        <div class="plan-desc">About $13.33 a month, billed every 6 months.</div>
         <ul class="plan-features">
           <li>Full access to all features</li>
           <li>1 installation</li>
-          <li>Renews as one-time payment</li>
+          <li>Renews every 6 months</li>
         </ul>
         <button class="btn btn-ghost plan-btn" :disabled="buyingSession" @click="buyFixed('six_month')">{{ buyingSession ? 'Loading…' : 'Get Started' }}</button>
       </div>
@@ -82,45 +82,13 @@
         <div class="plan-badge plan-badge-accent">Most Popular</div>
         <div class="plan-label">Yearly</div>
         <div class="plan-price">$150<span class="plan-per">/year</span></div>
-        <div class="plan-desc">Best value subscription — $25/mo effective.</div>
+        <div class="plan-desc">Best value: $12.50 a month, billed yearly.</div>
         <ul class="plan-features">
           <li>Full access to all features</li>
           <li>1 installation</li>
           <li>Renews annually</li>
         </ul>
         <button class="btn btn-primary plan-btn" :disabled="buyingSession" @click="buyFixed('yearly')">{{ buyingSession ? 'Loading…' : 'Get Started' }}</button>
-      </div>
-
-      <!-- Seasonal -->
-      <div class="plan-card">
-        <div class="plan-label">Seasonal</div>
-        <div class="plan-price-custom">
-          <span v-if="seasonalMonths > 0" class="plan-price-calc">
-            {{ cur }}{{ seasonalPrice }}<span class="plan-per"> one-time</span>
-          </span>
-          <span v-else class="plan-price-calc plan-price-muted">Pick dates</span>
-        </div>
-        <div class="plan-desc">Pay only for the months you operate.</div>
-        <div class="seasonal-dates">
-          <div class="form-group">
-            <label class="form-label">Start Date</label>
-            <input v-model="seasonalStart" class="form-input" type="date" :min="today" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">End Date</label>
-            <input v-model="seasonalEnd" class="form-input" type="date" :min="seasonalStart || today" />
-          </div>
-        </div>
-        <div v-if="seasonalMonths > 0" class="seasonal-calc">
-          {{ seasonalMonths.toFixed(1) }} months × $15 = <strong>{{ cur }}{{ seasonalPrice }}</strong>
-        </div>
-        <button
-          class="btn btn-ghost plan-btn"
-          :disabled="!canBuySeasonal || buyingSession"
-          @click="buySeasonal"
-        >
-          {{ buyingSession ? 'Creating checkout…' : 'Buy Seasonal' }}
-        </button>
       </div>
 
     </div>
@@ -139,7 +107,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { openUrl } from '@tauri-apps/plugin-opener'
@@ -156,22 +124,10 @@ onMounted(async () => {
 })
 watch(() => authStore.hasActiveLicense, (ok) => { if (ok) router.replace('/dashboard') })
 
-const today = new Date().toISOString().slice(0, 10)
-const seasonalStart = ref('')
-const seasonalEnd = ref('')
 const buyingSession = ref(false)
 const checking = ref(false)
 const checkMessage = ref('')
 const checkOk = ref(false)
-
-const seasonalMonths = computed(() => {
-  if (!seasonalStart.value || !seasonalEnd.value) return 0
-  const days = (new Date(seasonalEnd.value) - new Date(seasonalStart.value)) / 86400000
-  return days < 14 ? 0 : days / 30.44
-})
-
-const seasonalPrice = computed(() => Math.ceil(seasonalMonths.value * 15))
-const canBuySeasonal = computed(() => seasonalMonths.value > 0)
 
 async function buyFixed(planType) {
   buyingSession.value = true
@@ -183,30 +139,6 @@ async function buyFixed(planType) {
         user_id: authStore.user.id,
         user_email: authStore.user.email,
         plan_type: planType,
-      }),
-    })
-    const { url, error } = await res.json()
-    if (error) throw new Error(error)
-    await openUrl(url)
-  } catch (err) {
-    alert('Could not create checkout: ' + err.message)
-  } finally {
-    buyingSession.value = false
-  }
-}
-
-async function buySeasonal() {
-  if (!canBuySeasonal.value) return
-  buyingSession.value = true
-  try {
-    const res = await fetch(`${import.meta.env.VITE_MISE_API_URL}/checkout/seasonal`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: authStore.user.id,
-        user_email: authStore.user.email,
-        start_date: seasonalStart.value,
-        end_date: seasonalEnd.value,
       }),
     })
     const { url, error } = await res.json()
@@ -358,18 +290,6 @@ async function checkLicense() {
 
 .plan-btn { width: 100%; justify-content: center; }
 
-.seasonal-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
-.seasonal-dates .form-group { margin-bottom: 0; }
-
-.seasonal-calc {
-  font-size: 12px;
-  color: var(--text-muted);
-  text-align: center;
-  margin-bottom: 14px;
-  padding: 8px;
-  background: var(--surface-2);
-  border-radius: 6px;
-}
 
 .plans-verify {
   text-align: center;
