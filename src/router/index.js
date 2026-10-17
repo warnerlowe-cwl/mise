@@ -22,6 +22,7 @@ import Reports from '../views/Reports.vue'
 import Login from '../views/Login.vue'
 import Plans from '../views/Plans.vue'
 import Settings from '../views/Settings.vue'
+import ScanInvoice from '../views/ScanInvoice.vue'
 
 const routes = [
   { path: '/',            redirect: '/dashboard' },
@@ -49,6 +50,7 @@ const routes = [
   { path: '/prep',        component: PrepPlanner, meta: { title: 'Prep Planner', premium: true } },
   { path: '/specs',       component: SpecSheets, meta: { title: 'Spec Sheets', premium: true } },
   { path: '/compare',     component: PriceCompare, meta: { title: 'Compare Prices', premium: true } },
+  { path: '/scan',        component: ScanInvoice, meta: { title: 'Scan Invoice', premium: true } },
 ]
 
 const router = createRouter({

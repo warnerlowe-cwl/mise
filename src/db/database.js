@@ -29,7 +29,7 @@ export async function getDb() {
 const DATA_TABLES = [
   'ingredients', 'recipes', 'conversions',
   'recipe_ingredients', 'waste_log', 'price_history',
-  'supplier_prices', 'recipe_components', 'recipe_sizes',
+  'supplier_prices', 'recipe_components', 'recipe_sizes', 'invoice_aliases',
 ]
 
 // Seed a realistic starter set so every feature has data to show (onboarding/demo).
@@ -302,6 +302,21 @@ async function initSchema() {
       FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE
     )
   `)
+  // Scan Invoice remembers which ingredient each invoice line was (per supplier) and the pack size the
+  // user confirmed, so the next invoice from that supplier matches itself.
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS invoice_aliases (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      supplier TEXT NOT NULL DEFAULT '',
+      line_key TEXT NOT NULL,
+      ingredient_id INTEGER NOT NULL,
+      pack_size REAL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(supplier, line_key),
+      FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE
+    )
+  `)
+
   // Seed a baseline point for any existing ingredient with no history yet, so a price
   // tracked since day one still shows a starting price (dated from when it was created).
   await db.execute(`

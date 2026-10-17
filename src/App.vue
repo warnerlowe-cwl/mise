@@ -110,6 +110,13 @@
           </svg>
           Suppliers
         </RouterLink>
+        <RouterLink to="/scan" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 2h10v16l-2-1.5L11 18l-1-1.5L9 18l-2-1.5L5 18z"/>
+            <path d="M8 6h4M8 9h4M8 12h2"/>
+          </svg>
+          Scan Invoice<span v-if="premiumLocked" class="nav-lock">🔒</span>
+        </RouterLink>
         <RouterLink to="/compare" class="nav-item">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 4v12M6 4L3 8h6L6 4zM14 4v12M14 16l-3-4h6l-3 4z"/>

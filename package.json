@@ -4,8 +4,8 @@
   "version": "0.2.55",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node scripts/copy-ocr.js && vite",
+    "build": "node scripts/copy-ocr.js && vite build",
     "preview": "vite preview",
     "tauri": "tauri"
   },
@@ -16,7 +16,10 @@
     "@tauri-apps/plugin-process": "^2.3.1",
     "@tauri-apps/plugin-sql": "^2.4.0",
     "@tauri-apps/plugin-updater": "^2.10.1",
+    "@tesseract.js-data/eng": "1.0.0",
+    "pdfjs-dist": "4.10.38",
     "pinia": "^3.0.4",
+    "tesseract.js": "6.0.1",
     "vue": "^3.5.34",
     "vue-router": "^5.1.0"
   },

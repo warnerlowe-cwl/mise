@@ -30,3 +30,6 @@ src-tauri/target
 *.njsproj
 *.sln
 *.sw?
+
+# Invoice reader files, copied from node_modules by scripts/copy-ocr.js
+public/ocr

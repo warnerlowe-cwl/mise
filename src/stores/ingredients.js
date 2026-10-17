@@ -81,6 +81,7 @@ export const useIngredientsStore = defineStore('ingredients', {
       await this.update(ingredientId, {
         name: ing.name, unit: ing.unit, cost_per_unit: price, supplier,
         notes: ing.notes, pack_price: ing.pack_price, pack_size: ing.pack_size, pack_label: ing.pack_label,
+        yield_pct: ing.yield_pct,   // keep the trim yield (update() writes every column)
       })
     },
 
@@ -157,6 +158,45 @@ export const useIngredientsStore = defineStore('ingredients', {
         await this._logPrice(db, id, ingredient.cost_per_unit)
       }
       await this.fetchAll()
+    },
+
+    // Scan Invoice: remembered line -> ingredient matches for a supplier ('' = any supplier).
+    async loadInvoiceAliases(supplier) {
+      const db = await getDb()
+      return db.select('SELECT * FROM invoice_aliases WHERE supplier=? OR supplier=? ORDER BY supplier DESC', [supplier || '', ''])
+    },
+
+    // How many distinct recipes use any of these ingredients.
+    async recipesUsing(ids) {
+      if (!ids.length) return 0
+      const db = await getDb()
+      const [row] = await db.select(
+        `SELECT COUNT(DISTINCT recipe_id) AS n FROM recipe_ingredients WHERE ingredient_id IN (${ids.map(() => '?').join(',')})`, ids
+      )
+      return row?.n || 0
+    },
+
+    // Apply checked invoice lines: each becomes the ingredient's new price (logged to price history by
+    // update) and the match is remembered for next time.
+    async applyInvoice(supplier, lines) {
+      const db = await getDb()
+      for (const l of lines) {
+        const ing = this.ingredients.find((i) => i.id === l.ingredient_id)
+        if (!ing) continue
+        await this.update(ing.id, {
+          name: ing.name, unit: ing.unit, cost_per_unit: l.cost_per_unit, supplier: supplier || ing.supplier,
+          notes: ing.notes, pack_price: l.pack_price, pack_size: l.pack_size, pack_label: l.pack_label || ing.pack_label, yield_pct: ing.yield_pct,
+        })
+        if (l.line_key) {
+          await db.execute(
+            `INSERT INTO invoice_aliases (supplier, line_key, ingredient_id, pack_size) VALUES (?, ?, ?, ?)
+             ON CONFLICT(supplier, line_key) DO UPDATE SET ingredient_id=excluded.ingredient_id, pack_size=excluded.pack_size, updated_at=CURRENT_TIMESTAMP`,
+            [supplier || '', l.line_key, ing.id, l.pack_size ?? null]
+          )
+        }
+      }
+      await this.loadPriceHistory()
+      return lines.length
     },
 
     async remove(id) {
