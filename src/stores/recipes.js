@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { getDb } from '../db/database'
+import { checkRoom } from '../lib/plan'
+import { useUpsellStore } from './upsell'
 
 export const useRecipesStore = defineStore('recipes', {
   state: () => ({
@@ -139,6 +141,7 @@ export const useRecipesStore = defineStore('recipes', {
 
     async add(recipe, lines, components = [], sizes = []) {
       const db = await getDb()
+      await checkRoom(db, 'recipes', 1)
       await db.execute(
         'INSERT INTO recipes (name, category, servings, notes) VALUES (?, ?, ?, ?)',
         [recipe.name, recipe.category || null, recipe.servings, recipe.notes || null]
@@ -154,6 +157,7 @@ export const useRecipesStore = defineStore('recipes', {
       await this._saveComponents(db, recipeId, components)
       await this._saveSizes(db, recipeId, sizes)
       await this.fetchAll()
+      recipeTips(this.recipes, recipe.name)
     },
 
     async update(id, recipe, lines, components = [], sizes = []) {
@@ -202,6 +206,7 @@ export const useRecipesStore = defineStore('recipes', {
       const db = await getDb()
       const orig = this.recipes.find((r) => r.id === id)
       if (!orig) return
+      await checkRoom(db, 'recipes', 1)
       const lines = await this.getIngredients(id)
       await db.execute(
         `INSERT INTO recipes (name, category, servings, notes, menu_price, target_food_cost_pct, units_sold, prep_minutes)
@@ -253,3 +258,14 @@ export const useRecipesStore = defineStore('recipes', {
     },
   },
 })
+
+// Free to Premium tips after a new recipe: 10 recipes suggests Menu Engineering, a size in the name suggests Sizes.
+function recipeTips(recipes, name) {
+  const upsell = useUpsellStore()
+  if (/\b(small|medium|large|regular|kids?|half|full|single|double|mini|8 ?oz|12 ?oz|16 ?oz)\b/i.test(name || '')) {
+    upsell.offerTip('sizes', 'Selling this in more than one size? Sizes prices small, medium and large from one recipe.', '/sizes')
+  }
+  if (recipes.length >= 10) {
+    upsell.offerTip('menu', `You have ${recipes.length} recipes. Menu Engineering shows which dishes earn their place on the menu.`, '/menu')
+  }
+}

@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h1 class="page-title">Ingredients</h1>
-        <p class="page-subtitle">Manage your ingredient list and unit costs</p>
+        <p class="page-subtitle">Manage your ingredient list and unit costs<span v-if="!auth.hasActiveLicense" class="free-count"> · {{ store.ingredients.length }} of {{ FREE_LIMITS.ingredients }} on the free plan</span></p>
       </div>
       <div style="display:flex; gap:8px">
         <button class="btn btn-ghost" @click="openLibrary">📚 From library</button>
@@ -288,10 +288,13 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useIngredientsStore } from '../stores/ingredients'
+import { useAuthStore } from '../stores/auth'
+import { FREE_LIMITS, LimitError } from '../lib/plan'
 import { getRegion, suppliersForRegion } from '../data/suppliers'
 import { INGREDIENT_LIBRARY } from '../data/ingredient_library'
 
 const store = useIngredientsStore()
+const auth = useAuthStore()
 
 // ── Starter library ────────────────────────────────────────
 const library = INGREDIENT_LIBRARY
@@ -324,6 +327,8 @@ async function addFromLibrary() {
   try {
     await store.addMany(rows)
     showLibrary.value = false
+  } catch (e) {
+    if (!(e instanceof LimitError)) throw e
   } finally {
     addingLib.value = false
   }
@@ -410,7 +415,12 @@ async function save() {
   if (editingId.value) {
     await store.update(editingId.value, payload)
   } else {
-    await store.add(payload)
+    try {
+      await store.add(payload)
+    } catch (e) {
+      if (e instanceof LimitError) return   // the upgrade dialog is already open; keep the form
+      throw e
+    }
   }
   closeModal()
 }
@@ -536,6 +546,7 @@ async function runImport() {
     await store.addMany(parsed.value.valid)
     closeImport()
   } catch (e) {
+    if (e instanceof LimitError) return
     alert('Import failed: ' + (e.message || e))
   } finally {
     importing.value = false
@@ -570,4 +581,5 @@ async function runImport() {
 .lib-unit { font-size: 11px; color: var(--text-dim); }
 .lib-chip-on .lib-unit { color: var(--accent); }
 .lib-have-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-left: 2px; }
+.free-count { color: var(--text-muted); }
 </style>

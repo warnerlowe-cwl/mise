@@ -7,6 +7,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const license = ref(null)
   const loading = ref(true)
+  const everHadLicense = ref(false)   // any licence ever, trial included: the 14-day trial is once per account
 
   const isLoggedIn = computed(() => !!user.value)
   const businessName = computed(() => user.value?.user_metadata?.business_name || '')
@@ -59,6 +60,8 @@ export const useAuthStore = defineStore('auth', () => {
         .maybeSingle()
 
       if (!error) license.value = data
+      const { data: any } = await supabase.from('licenses').select('id').limit(1)
+      everHadLicense.value = !!(any && any.length)
     } catch (_) { /* leave license as-is; app stays accessible */ }
   }
 
@@ -91,6 +94,24 @@ export const useAuthStore = defineStore('auth', () => {
     await fetchLicense()
   }
 
+  // 14-day Premium trial, no card (17 Oct 2026). The server checks the account and allows one per account.
+  async function startTrial() {
+    const { data: { session } } = await supabase.auth.getSession()
+    let res
+    try {
+      res = await fetch(`${import.meta.env.VITE_MISE_API_URL}/trial`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session?.access_token || ''}` },
+      })
+    } catch (_) {
+      throw new Error('Could not reach MenuCents. Check your internet connection and try again.')
+    }
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(body.error || 'Could not start the trial.')
+    await fetchLicense()
+    return body
+  }
+
   async function updateProfile({ businessName }) {
     const { data, error } = await supabase.auth.updateUser({
       data: { business_name: (businessName || '').trim() },
@@ -101,8 +122,8 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   return {
-    user, license, loading, businessName,
+    user, license, loading, businessName, everHadLicense,
     isLoggedIn, hasActiveLicense, licenseStatus,
-    init, signIn, signUp, signOut, refreshLicense, updateProfile,
+    init, signIn, signUp, signOut, refreshLicense, updateProfile, startTrial,
   }
 })

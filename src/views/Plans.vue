@@ -8,8 +8,8 @@
           <path d="M5 5V3.5M7 5.5V3M9 5V3.5"/>
         </svg>
       </div>
-      <h1 class="plans-title">Choose your MenuCents plan</h1>
-      <p class="plans-sub">Activate your license to start managing your kitchen costs</p>
+      <h1 class="plans-title">Unlock the pro tools</h1>
+      <p class="plans-sub">The free app stays free, with up to {{ FREE_LIMITS.recipes }} recipes and {{ FREE_LIMITS.ingredients }} ingredients. Premium removes the limits and adds every pro tool.</p>
       <p class="plans-account">Signed in as <strong>{{ authStore.user?.email }}</strong> ·
         <button class="link-btn" @click="authStore.signOut()">Sign out</button>
       </p>
@@ -19,9 +19,9 @@
     <div class="compare-box">
       <div class="compare-col">
         <div class="compare-tier">Free</div>
-        <div class="compare-tier-sub">The core app, on one computer — yours forever</div>
+        <div class="compare-tier-sub">The core app on one computer, free for good</div>
         <ul class="compare-list">
-          <li>Ingredients &amp; recipes</li>
+          <li>Up to {{ FREE_LIMITS.recipes }} recipes and {{ FREE_LIMITS.ingredients }} ingredients</li>
           <li>Menu pricing</li>
           <li>Inventory &amp; par levels</li>
           <li>Suppliers &amp; order sheets</li>
@@ -34,9 +34,11 @@
         <div class="compare-tier">Premium <span style="color:var(--accent)">★</span></div>
         <div class="compare-tier-sub">Everything in Free, plus the pro tools</div>
         <ul class="compare-list compare-list-premium">
+          <li>Unlimited recipes and ingredients</li>
+          <li>Scan Invoice (photos and PDFs)</li>
           <li>Menu Engineering (Stars / Dogs)</li>
           <li>Plate Cost (food + labor)</li>
-          <li>Sizes — S/M/L &amp; scoop pricing</li>
+          <li>Sizes: S/M/L &amp; scoop pricing</li>
           <li>Sub-recipes (buttercream, syrups, doughs)</li>
           <li>Compare Prices across suppliers</li>
           <li>Price Trends</li>
@@ -47,8 +49,46 @@
       </div>
     </div>
 
+    <!-- 14-day trial (once per account) -->
+    <div v-if="canTrial" class="trial-box">
+      <div>
+        <strong>Try every Premium tool free for 14 days.</strong>
+        <span>No card needed. After 14 days you go back to Free and keep everything you made.</span>
+      </div>
+      <button class="btn btn-primary" :disabled="startingTrial" @click="trial">{{ startingTrial ? 'Starting…' : 'Start free trial' }}</button>
+    </div>
+    <p v-if="trialErr" class="check-msg check-err" style="text-align:center">{{ trialErr }}</p>
+
     <!-- Plan cards -->
     <div class="plans-grid">
+
+      <!-- Founding kitchens: $100 a year for the first 20, while they stay subscribed -->
+      <div v-if="founding.available" class="plan-card plan-card-featured">
+        <div class="plan-badge plan-badge-accent">{{ founding.left }} of 20 left</div>
+        <div class="plan-label">Founding kitchens</div>
+        <div class="plan-price">$100<span class="plan-per">/year</span></div>
+        <div class="plan-desc">For the first 20 kitchens. Stays $100 a year for as long as you stay subscribed.</div>
+        <ul class="plan-features">
+          <li>Full access to all features</li>
+          <li>1 installation</li>
+          <li>Renews annually at $100</li>
+        </ul>
+        <button class="btn btn-primary plan-btn" :disabled="buyingSession" @click="buyFixed('founding_yearly')">{{ buyingSession ? 'Loading…' : 'Get Started' }}</button>
+      </div>
+
+      <!-- Yearly -->
+      <div class="plan-card" :class="{ 'plan-card-featured': !founding.available }">
+        <div class="plan-badge plan-badge-accent">Best value</div>
+        <div class="plan-label">Yearly</div>
+        <div class="plan-price">$150<span class="plan-per">/year</span></div>
+        <div class="plan-desc">Best value: $12.50 a month, billed yearly.</div>
+        <ul class="plan-features">
+          <li>Full access to all features</li>
+          <li>1 installation</li>
+          <li>Renews annually</li>
+        </ul>
+        <button class="btn btn-primary plan-btn" :disabled="buyingSession" @click="buyFixed('yearly')">{{ buyingSession ? 'Loading…' : 'Get Started' }}</button>
+      </div>
 
       <!-- Monthly -->
       <div class="plan-card">
@@ -77,21 +117,9 @@
         <button class="btn btn-ghost plan-btn" :disabled="buyingSession" @click="buyFixed('six_month')">{{ buyingSession ? 'Loading…' : 'Get Started' }}</button>
       </div>
 
-      <!-- Yearly -->
-      <div class="plan-card plan-card-featured">
-        <div class="plan-badge plan-badge-accent">Most Popular</div>
-        <div class="plan-label">Yearly</div>
-        <div class="plan-price">$150<span class="plan-per">/year</span></div>
-        <div class="plan-desc">Best value: $12.50 a month, billed yearly.</div>
-        <ul class="plan-features">
-          <li>Full access to all features</li>
-          <li>1 installation</li>
-          <li>Renews annually</li>
-        </ul>
-        <button class="btn btn-primary plan-btn" :disabled="buyingSession" @click="buyFixed('yearly')">{{ buyingSession ? 'Loading…' : 'Get Started' }}</button>
-      </div>
-
     </div>
+
+    <p class="plans-promise">The free app stays free. Cancel Premium anytime and keep your data.</p>
 
     <!-- Already paid check -->
     <div class="plans-verify">
@@ -107,10 +135,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { openUrl } from '@tauri-apps/plugin-opener'
+import { FREE_LIMITS } from '../lib/plan'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -123,6 +152,28 @@ onMounted(async () => {
   if (authStore.hasActiveLicense) router.replace('/dashboard')
 })
 watch(() => authStore.hasActiveLicense, (ok) => { if (ok) router.replace('/dashboard') })
+
+const API = import.meta.env.VITE_MISE_API_URL
+const canTrial = computed(() => authStore.isLoggedIn && !authStore.everHadLicense)
+const startingTrial = ref(false)
+const trialErr = ref('')
+const founding = ref({ available: false, left: 0 })
+
+onMounted(async () => {
+  try { founding.value = await (await fetch(`${API}/founding`)).json() } catch (_) { /* founding card stays hidden */ }
+})
+
+async function trial() {
+  startingTrial.value = true
+  trialErr.value = ''
+  try {
+    await authStore.startTrial()     // the watch above then takes them to the dashboard
+  } catch (e) {
+    trialErr.value = e.message
+  } finally {
+    startingTrial.value = false
+  }
+}
 
 const buyingSession = ref(false)
 const checking = ref(false)
@@ -171,6 +222,10 @@ async function checkLicense() {
 </script>
 
 <style scoped>
+.trial-box { max-width: 1200px; margin: 0 auto 20px; display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--accent); border-radius: 12px; padding: 16px 20px; }
+.trial-box strong { display: block; color: var(--text); font-size: 15px; margin-bottom: 3px; }
+.trial-box span { color: var(--text-dim); font-size: 13px; }
+.plans-promise { text-align: center; color: var(--text-dim); font-size: 13px; margin: -20px 0 28px; }
 .plans-screen {
   min-height: 100vh;
   background: var(--bg);

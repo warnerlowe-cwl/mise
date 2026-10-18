@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { getDb } from '../db/database'
+import { checkRoom } from '../lib/plan'
+import { useUpsellStore } from './upsell'
 
 export const useIngredientsStore = defineStore('ingredients', {
   state: () => ({
@@ -95,6 +97,7 @@ export const useIngredientsStore = defineStore('ingredients', {
 
     async add(ingredient) {
       const db = await getDb()
+      await checkRoom(db, 'ingredients', 1)
       await db.execute(
         'INSERT INTO ingredients (name, unit, cost_per_unit, supplier, notes, pack_price, pack_size, pack_label, yield_pct) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [
@@ -110,6 +113,7 @@ export const useIngredientsStore = defineStore('ingredients', {
     // Bulk insert (CSV import). Inserts all rows + a baseline price point each, refreshes once.
     async addMany(rows) {
       const db = await getDb()
+      await checkRoom(db, 'ingredients', rows.length)
       for (const r of rows) {
         await db.execute(
           'INSERT INTO ingredients (name, unit, cost_per_unit, supplier, notes) VALUES (?, ?, ?, ?, ?)',
@@ -156,6 +160,7 @@ export const useIngredientsStore = defineStore('ingredients', {
       // Only record a new price point when the cost actually changed.
       if (!prev || Number(prev.cost_per_unit) !== Number(ingredient.cost_per_unit)) {
         await this._logPrice(db, id, ingredient.cost_per_unit)
+        if (prev) priceTip(prev, Number(ingredient.cost_per_unit))
       }
       await this.fetchAll()
     },
@@ -206,3 +211,14 @@ export const useIngredientsStore = defineStore('ingredients', {
     },
   },
 })
+
+// Free to Premium tips after a price typed in by hand: a price rise suggests Price Trends, the 5th price in a day Scan Invoice.
+function priceTip(prev, cost) {
+  const upsell = useUpsellStore()
+  const was = Number(prev.cost_per_unit)
+  if (was > 0 && cost > was * 1.05) {
+    const pct = Math.round((cost / was - 1) * 100)
+    upsell.offerTip('trends', `${prev.name} went up ${pct}%. Price Trends shows every ingredient that keeps creeping up.`, '/prices')
+  }
+  upsell.priceTyped()
+}

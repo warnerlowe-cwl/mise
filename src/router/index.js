@@ -21,6 +21,7 @@ import Conversions from '../views/Conversions.vue'
 import Reports from '../views/Reports.vue'
 import Login from '../views/Login.vue'
 import Plans from '../views/Plans.vue'
+import PremiumPreview from '../views/PremiumPreview.vue'
 import Settings from '../views/Settings.vue'
 import ScanInvoice from '../views/ScanInvoice.vue'
 
@@ -40,6 +41,8 @@ const routes = [
   { path: '/conversions', component: Conversions, meta: { title: 'Conversions' } },
   { path: '/reports',     component: Reports,     meta: { title: 'Reports' } },
   { path: '/settings',    component: Settings,    meta: { title: 'Settings' } },
+  // A free user who opens a Premium tool sees what it does, from their own data (17 Oct 2026)
+  { path: '/premium/:tool', component: PremiumPreview, meta: { title: 'Premium' } },
   // Premium (require an active license)
   { path: '/menu',        component: MenuEngineering, meta: { title: 'Menu Engineering', premium: true } },
   { path: '/plate',       component: PlateCost,  meta: { title: 'Plate Cost', premium: true } },
@@ -81,7 +84,7 @@ router.beforeEach(async (to) => {
     if (!auth.license) {
       try { await auth.refreshLicense() } catch (_) { /* treated as no active license */ }
     }
-    if (!auth.hasActiveLicense) return '/plans'
+    if (!auth.hasActiveLicense) return '/premium' + to.path
   }
 
   return true

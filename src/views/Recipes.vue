@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h1 class="page-title">Recipes</h1>
-        <p class="page-subtitle">Build and cost your recipes from ingredients</p>
+        <p class="page-subtitle">Build and cost your recipes from ingredients<span v-if="!auth.hasActiveLicense" class="free-count"> · {{ store.recipes.length }} of {{ FREE_LIMITS.recipes }} on the free plan</span></p>
       </div>
       <button class="btn btn-primary" @click="openAdd">+ Add Recipe</button>
     </div>
@@ -235,6 +235,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRecipesStore } from '../stores/recipes'
 import { useIngredientsStore } from '../stores/ingredients'
 import { useAuthStore } from '../stores/auth'
+import { FREE_LIMITS, LimitError } from '../lib/plan'
 
 const store = useRecipesStore()
 const ingredientsStore = useIngredientsStore()
@@ -370,7 +371,12 @@ async function save() {
   if (editingId.value) {
     await store.update(editingId.value, form.value, validLines, validComponents, validSizes)
   } else {
-    await store.add(form.value, validLines, validComponents, validSizes)
+    try {
+      await store.add(form.value, validLines, validComponents, validSizes)
+    } catch (e) {
+      if (e instanceof LimitError) return   // the upgrade dialog is already open; keep the form
+      throw e
+    }
   }
   closeModal()
 }
@@ -380,7 +386,11 @@ function confirmDelete(r) {
 }
 
 async function duplicate(r) {
-  await store.duplicate(r.id)
+  try {
+    await store.duplicate(r.id)
+  } catch (e) {
+    if (!(e instanceof LimitError)) throw e
+  }
 }
 
 async function doDelete() {
@@ -388,3 +398,7 @@ async function doDelete() {
   deleteTarget.value = null
 }
 </script>
+
+<style scoped>
+.free-count { color: var(--text-muted); }
+</style>

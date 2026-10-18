@@ -60,6 +60,14 @@
       <p class="settings-err" v-if="dataErr">{{ dataErr }}</p>
     </div>
 
+    <div v-if="!authStore.hasActiveLicense" class="card" style="max-width: 540px; margin-top: 16px">
+      <div class="section-header">Tips</div>
+      <label style="display:flex; gap:10px; align-items:center; font-size:13.5px; cursor:pointer">
+        <input type="checkbox" :checked="!upsell.tipsOff" @change="upsell.setTipsOff(!$event.target.checked)" />
+        Show tips about Premium tools (at most one a week)
+      </label>
+    </div>
+
     <div class="card" style="max-width: 540px; margin-top: 16px">
       <div class="section-header">Account</div>
       <button class="btn btn-ghost" @click="authStore.signOut()">Sign out</button>
@@ -74,6 +82,9 @@ import { exportAll, importAll, getDb, seedSampleData } from '../db/database'
 import { REGIONS, getRegion, setRegion } from '../data/suppliers'
 import { applyRegionCurrency } from '../currency'
 import { useRecipesStore } from '../stores/recipes'
+import { useUpsellStore } from '../stores/upsell'
+
+const upsell = useUpsellStore()
 
 const recipesStore = useRecipesStore()
 

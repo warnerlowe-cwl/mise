@@ -175,7 +175,10 @@
           <div class="sidebar-user">
             <div class="sidebar-user-name" v-if="authStore.businessName">{{ authStore.businessName }}</div>
             <div class="sidebar-user-email">{{ authStore.user.email }}</div>
-            <div class="sidebar-user-plan" v-if="authStore.license">
+            <div class="sidebar-user-plan" v-if="premiumLocked">
+              Free plan · <RouterLink to="/plans" class="plan-upgrade">Upgrade</RouterLink>
+            </div>
+            <div class="sidebar-user-plan" v-else-if="authStore.license">
               {{ planLabel(authStore.license.plan_type) }}
               <span v-if="authStore.license.expires_at" class="plan-expiry">
                 · exp {{ formatExpiry(authStore.license.expires_at) }}
@@ -195,6 +198,7 @@
         </Transition>
       </RouterView>
     </main>
+    <UpsellLayer />
   </div>
 </template>
 
@@ -202,6 +206,7 @@
 import { onMounted, computed } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import { useAuthStore } from './stores/auth'
+import UpsellLayer from './components/UpsellLayer.vue'
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 
@@ -230,6 +235,8 @@ const PLAN_LABELS = {
   six_month:         '6-Month',
   yearly:            'Yearly',
   seasonal:          'Seasonal',
+  founding_yearly:   'Yearly (founding)',
+  trial:             'Premium trial',
 }
 
 function planLabel(type) {
@@ -386,6 +393,7 @@ body {
 .sidebar-user-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 1px; }
 .sidebar-user-email { font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sidebar-user-plan { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.plan-upgrade { color: var(--accent); font-weight: 600; text-decoration: none; }
 .plan-expiry { opacity: 0.7; }
 
 .signout-btn {
