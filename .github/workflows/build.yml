@@ -122,6 +122,19 @@ jobs:
           prerelease: false
           args: ${{ matrix.args }}
 
+      # Microsoft Store package (MSIX). The Store signs it, so no paid certificate is needed.
+      # Until src-tauri/msix/identity.json has the Partner Center values it builds a TEST package.
+      # Never blocks the release: the normal installers above are already built.
+      - name: Build Microsoft Store package (Windows)
+        if: matrix.platform == 'windows-latest'
+        continue-on-error: true
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./src-tauri/msix/make_msix.ps1
+          gh release upload "${{ github.ref_name }}" "$env:MSIX" --repo warnerlowe-cwl/mise --clobber
+
       - name: Upload to R2 (macOS)
         if: matrix.platform == 'macos-latest' && env.HAS_R2 == 'true'
         env:

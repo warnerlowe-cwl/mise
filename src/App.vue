@@ -209,6 +209,7 @@ import { useAuthStore } from './stores/auth'
 import UpsellLayer from './components/UpsellLayer.vue'
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
+import { invoke } from '@tauri-apps/api/core'
 
 const authStore = useAuthStore()
 
@@ -218,8 +219,10 @@ const premiumLocked = computed(() => authStore.isLoggedIn && !authStore.hasActiv
 // Auto-update: on launch, quietly check for a newer signed release; if there is one,
 // download + install it and relaunch into the new version. Wrapped so it's a harmless
 // no-op in dev/web (the updater plugin only exists in the built desktop app) or offline.
+// The Microsoft Store copy is updated by the Store, so it never updates itself.
 onMounted(async () => {
   try {
+    if (await invoke('store_install').catch(() => false)) return
     const update = await check()
     if (update && update.available) {
       await update.downloadAndInstall()
